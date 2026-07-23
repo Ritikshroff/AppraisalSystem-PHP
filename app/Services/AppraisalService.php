@@ -176,7 +176,7 @@ class AppraisalService
         }
         $now = now();
         return ($now->greaterThanOrEqualTo($settings->globalDeadlineStart) &&
-                $now->lessThanOrEqualTo($settings->globalDeadlineEnd));
+            $now->lessThanOrEqualTo($settings->globalDeadlineEnd));
     }
 
     private static function buildPermissions(User $user, Appraisal $appraisal, ?SystemSettings $settings): array
@@ -247,7 +247,7 @@ class AppraisalService
         if (!empty($query)) {
             $visibleQuery->whereHas('employee', function ($q) use ($query) {
                 $q->where('fullName', 'like', "%{$query}%")
-                  ->orWhere('employeeCode', 'like', "%{$query}%");
+                    ->orWhere('employeeCode', 'like', "%{$query}%");
             });
         }
 
@@ -264,10 +264,14 @@ class AppraisalService
         foreach ($groupedCounts as $item) {
             $itemStatus = strtoupper($item->status);
             $counts['total'] += $item->count;
-            if ($itemStatus === 'DRAFT') $counts['draft'] = $item->count;
-            if ($itemStatus === 'SUBMITTED') $counts['submitted'] = $item->count;
-            if ($itemStatus === 'MANAGER_REVIEW') $counts['managerReview'] = $item->count;
-            if ($itemStatus === 'COMPLETED') $counts['completed'] = $item->count;
+            if ($itemStatus === 'DRAFT')
+                $counts['draft'] = $item->count;
+            if ($itemStatus === 'SUBMITTED')
+                $counts['submitted'] = $item->count;
+            if ($itemStatus === 'MANAGER_REVIEW')
+                $counts['managerReview'] = $item->count;
+            if ($itemStatus === 'COMPLETED')
+                $counts['completed'] = $item->count;
         }
 
         // Pending Appraisals Query
@@ -290,7 +294,7 @@ class AppraisalService
             if (!empty($query)) {
                 $teamStatusQuery->whereHas('employee', function ($q) use ($query) {
                     $q->where('fullName', 'like', "%{$query}%")
-                      ->orWhere('employeeCode', 'like', "%{$query}%");
+                        ->orWhere('employeeCode', 'like', "%{$query}%");
                 });
             }
         }
@@ -312,23 +316,23 @@ class AppraisalService
         $metrics = [];
         if ($role === 'EMPLOYEE') {
             $metrics = [
-                ['label' => "My Appraisals", 'value' => (string)$counts['total'], 'detail' => "Work and salary appraisals assigned to you."],
-                ['label' => "Draft", 'value' => (string)$counts['draft'], 'detail' => "Appraisals still editable by you."],
-                ['label' => "Pending", 'value' => (string)$counts['submitted'], 'detail' => "Submitted and awaiting manager review."],
-                ['label' => "Final", 'value' => (string)$counts['completed'], 'detail' => "Appraisals finalized by the CEO."],
+                ['label' => "My Appraisals", 'value' => (string) $counts['total'], 'detail' => "Work and salary appraisals assigned to you."],
+                ['label' => "Draft", 'value' => (string) $counts['draft'], 'detail' => "Appraisals still editable by you."],
+                ['label' => "Pending", 'value' => (string) $counts['submitted'], 'detail' => "Submitted and awaiting manager review."],
+                ['label' => "Final", 'value' => (string) $counts['completed'], 'detail' => "Appraisals finalized by the CEO."],
             ];
         } elseif ($role === 'MANAGER') {
             $metrics = [
-                ['label' => "Team Reviews", 'value' => (string)$counts['total'], 'detail' => "Appraisals in your team portfolio."],
-                ['label' => "Pending Reviews", 'value' => (string)$counts['submitted'], 'detail' => "Employee submissions awaiting your review."],
-                ['label' => "Reviewed", 'value' => (string)$counts['managerReview'], 'detail' => "Manager-reviewed appraisals ready for the CEO."],
-                ['label' => "Completed", 'value' => (string)$counts['completed'], 'detail' => "Finalized appraisals in your team."],
+                ['label' => "Team Reviews", 'value' => (string) $counts['total'], 'detail' => "Appraisals in your team portfolio."],
+                ['label' => "Pending Reviews", 'value' => (string) $counts['submitted'], 'detail' => "Employee submissions awaiting your review."],
+                ['label' => "Reviewed", 'value' => (string) $counts['managerReview'], 'detail' => "Manager-reviewed appraisals ready for the CEO."],
+                ['label' => "Completed", 'value' => (string) $counts['completed'], 'detail' => "Finalized appraisals in your team."],
             ];
         } else {
             $metrics = [
-                ['label' => "Enterprise Appraisals", 'value' => (string)$counts['total'], 'detail' => "All appraisals across teams and cycles."],
-                ['label' => "Pending Final", 'value' => (string)$counts['managerReview'], 'detail' => "Manager-reviewed appraisals awaiting final decision."],
-                ['label' => "Completed", 'value' => (string)$counts['completed'], 'detail' => "CEO finalized appraisals."],
+                ['label' => "Enterprise Appraisals", 'value' => (string) $counts['total'], 'detail' => "All appraisals across teams and cycles."],
+                ['label' => "Pending Final", 'value' => (string) $counts['managerReview'], 'detail' => "Manager-reviewed appraisals awaiting final decision."],
+                ['label' => "Completed", 'value' => (string) $counts['completed'], 'detail' => "CEO finalized appraisals."],
             ];
         }
 
@@ -386,7 +390,7 @@ class AppraisalService
             $empQuery = Employee::query();
             if (!empty($query)) {
                 $empQuery->where('fullName', 'like', "%{$query}%")
-                         ->orWhere('employeeCode', 'like', "%{$query}%");
+                    ->orWhere('employeeCode', 'like', "%{$query}%");
             }
             $employeesList = $empQuery->orderBy('fullName', 'asc')->paginate(self::DASHBOARD_PAGE_SIZES['employees'], ['*'], 'employeePage', $visiblePage);
             $employeeSummaries = collect($employeesList->items())->map(fn($emp) => self::serializeActor($emp))->toArray();
@@ -402,7 +406,7 @@ class AppraisalService
             ])->toArray();
 
             $allTeams = Team::with('manager')->get()->map(fn($t) => self::serializeTeam($t))->toArray();
-            
+
             $systemSettings = SystemSettings::find('GLOBAL');
             $settingsSummary = [
                 'globalDeadlineStart' => $systemSettings ? $systemSettings->globalDeadlineStart->toIso8601String() : now()->toIso8601String(),
@@ -497,7 +501,8 @@ class AppraisalService
 
         // Helper string array parsers
         $parseStringArray = function ($value) {
-            if (empty($value)) return [];
+            if (empty($value))
+                return [];
             $decoded = json_decode($value, true);
             return is_array($decoded) ? $decoded : [];
         };
@@ -743,8 +748,10 @@ class AppraisalService
         }
 
         if ($role === 'CEO') {
-            if (!isset($payload['ceoReview']['finalRating']) || $payload['ceoReview']['finalRating'] === null ||
-                !isset($payload['ceoReview']['hikePercentage']) || $payload['ceoReview']['hikePercentage'] === null) {
+            if (
+                !isset($payload['ceoReview']['finalRating']) || $payload['ceoReview']['finalRating'] === null ||
+                !isset($payload['ceoReview']['hikePercentage']) || $payload['ceoReview']['hikePercentage'] === null
+            ) {
                 throw new \Exception("CEO decision requires a final rating and hike percentage.");
             }
         }

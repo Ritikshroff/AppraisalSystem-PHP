@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
-    
+    // kjndjn
     Route::get('/signup', [AuthController::class, 'showSignup'])->name('signup');
     Route::post('/signup', [AuthController::class, 'signup']);
 });
@@ -19,7 +19,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    
+
     // Appraisal Detail, Save, Submit Routes
     Route::get('/appraisals/{id}', [AppraisalController::class, 'show'])->name('appraisals.show');
     Route::post('/appraisals/{id}/save', [AppraisalController::class, 'save'])->name('appraisals.save');
