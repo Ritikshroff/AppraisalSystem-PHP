@@ -8,12 +8,12 @@
   },
   "routes": [
     {
-      "src": "/(css|js|images|fonts)/(.*)",
-      "dest": "/public/$2"
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
+      "src": "/(.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|ttf|woff|woff2|eot|otf|webp|avif|txt))$",
+      "dest": "/public/$1"
     },
     {
       "src": "/(.*)",
