@@ -1,0 +1,365 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard - AppraisalFlow')
+
+@section('content')
+<div class="space-y-8" x-data="{ currentTab: '{{ $data['viewer']['role'] === 'HR' ? 'hr' : 'appraisals' }}' }">
+    <!-- Header Summary Card -->
+    <div class="bg-white border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-black">
+                Welcome back, <span class="text-blue-500">{{ $data['viewer']['name'] }}</span>
+            </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Logged in as <span class="font-semibold text-black capitalize">{{ strtolower($data['viewer']['role']) }}</span>
+                @if($data['viewer']['teamName'])
+                    &bull; Team <span class="font-semibold text-black">{{ $data['viewer']['teamName'] }}</span>
+                @endif
+            </p>
+        </div>
+        
+        <!-- Tab switches (only for HR) -->
+        <div class="flex bg-gray-100 p-1 border border-gray-200">
+            @if($data['viewer']['role'] !== 'HR')
+                <button @click="currentTab = 'appraisals'" :class="currentTab === 'appraisals' ? 'bg-blue-500 text-white font-semibold' : 'text-gray-600 hover:text-black'" 
+                    class="px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer">
+                    Appraisals
+                </button>
+            @endif
+            
+            @if($data['viewer']['role'] === 'HR')
+                <button @click="currentTab = 'hr'" :class="currentTab === 'hr' ? 'bg-blue-500 text-white font-semibold' : 'text-gray-600 hover:text-black'" 
+                    class="px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer">
+                    HR Panel
+                </button>
+            @endif
+        </div>
+    </div>
+
+    <!-- Tab: Appraisals -->
+    <div x-show="currentTab === 'appraisals'" class="space-y-8">
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach($data['metrics'] as $metric)
+                <div class="bg-white border border-gray-200 p-5">
+                    <dt class="truncate text-xs font-bold uppercase tracking-wider text-blue-500">{{ $metric['label'] }}</dt>
+                    <dd class="mt-2 text-3xl font-extrabold tracking-tight text-black">{{ $metric['value'] }}</dd>
+                    <dd class="mt-1 text-xs text-gray-500 leading-normal">{{ $metric['detail'] }}</dd>
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Search Filter -->
+        <div class="bg-white border border-gray-200 p-4">
+            <form action="{{ route('dashboard') }}" method="GET" class="flex gap-3">
+                <input type="hidden" name="view" value="{{ request('view', 'dashboard') }}">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i data-lucide="search" class="h-4 w-4"></i>
+                    </span>
+                    <input type="text" name="query" value="{{ $data['filters']['query'] }}" placeholder="Search appraisals by employee code or name..."
+                        class="block w-full border border-gray-300 py-2 pl-9 pr-4 text-black placeholder:text-gray-400 focus:outline-none focus:border-blue-500 text-sm">
+                </div>
+                <button type="submit" class="border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-black hover:bg-gray-50 transition-colors cursor-pointer">
+                    Filter
+                </button>
+            </form>
+        </div>
+
+        <!-- Dashboard Content Split Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left 2 Cols: Main Appraisal Tables -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Visible Appraisals -->
+                <div class="bg-white border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider">All Appraisals</h3>
+                        <span class="bg-gray-100 border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-600">Page {{ $data['visibleAppraisals']['pageInfo']['page'] }}</span>
+                    </div>
+
+                    <div class="divide-y divide-gray-200">
+                        @if(empty($data['visibleAppraisals']['items']))
+                            <div class="px-6 py-10 text-center text-gray-500 text-sm">
+                                <i data-lucide="inbox" class="h-8 w-8 mx-auto text-gray-400 mb-2"></i>
+                                No active appraisals found.
+                            </div>
+                        @else
+                            @foreach($data['visibleAppraisals']['items'] as $item)
+                                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-2">
+                                            <a href="{{ route('appraisals.show', $item['id']) }}" class="text-sm font-bold text-blue-500 hover:underline">
+                                                {{ $item['employeeName'] }}
+                                            </a>
+                                            <span class="text-xs text-gray-500">({{ $item['employeeCode'] }})</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600">
+                                            {{ $item['cycleName'] }} &bull; {{ $item['appraisalPeriod'] }} ({{ $item['appraisalType'] }})
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <!-- Sentiment Label -->
+                                        @if($item['sentimentLabel'])
+                                            <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-bold border
+                                                {{ $item['sentimentLabel'] === 'POSITIVE' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200' }}">
+                                                {{ $item['sentimentLabel'] }}
+                                            </span>
+                                        @endif
+
+                                        <!-- Badge Status -->
+                                        <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold border
+                                            {{ $item['status'] === 'DRAFT' ? 'bg-gray-100 text-gray-600 border-gray-200' : '' }}
+                                            {{ $item['status'] === 'SUBMITTED' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
+                                            {{ $item['status'] === 'MANAGER_REVIEW' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
+                                            {{ $item['status'] === 'COMPLETED' ? 'bg-black text-white border-black' : '' }}">
+                                            {{ $item['status'] }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Co-Workers / Team Progress -->
+                @if($data['viewer']['role'] === 'EMPLOYEE')
+                    <div class="bg-white border border-gray-200">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="text-sm font-bold text-black uppercase tracking-wider">Co-Workers Progress</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            @if(empty($data['teamMemberStatuses']['items']))
+                                <div class="px-6 py-8 text-center text-gray-500 text-sm">
+                                    No other team members found.
+                                </div>
+                            @else
+                                @foreach($data['teamMemberStatuses']['items'] as $item)
+                                    <div class="px-6 py-4 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-semibold text-black">{{ $item['employeeName'] }}</p>
+                                            <p class="text-xs text-gray-500">{{ $item['appraisalPeriod'] }} ({{ $item['appraisalType'] }})</p>
+                                        </div>
+                                        <span class="inline-flex items-center border border-gray-200 px-2 py-0.5 text-xs text-gray-600">
+                                            {{ $item['status'] }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Right 1 Col: Dynamic Action Panel & Stats -->
+            <div class="space-y-8">
+                <!-- Action Required / Pending Review Box -->
+                <div class="bg-white border-l-4 border-blue-500 border-y border-r border-gray-200 p-6">
+                    <h3 class="text-base font-bold text-black flex items-center gap-2">
+                        <i data-lucide="bell" class="h-4 w-4 text-blue-500"></i>
+                        Action Items
+                    </h3>
+                    <p class="mt-1 text-xs text-gray-500">Tasks requiring your execution.</p>
+                    
+                    <div class="mt-4 space-y-3">
+                        @if(empty($data['pendingAppraisals']['items']))
+                            <div class="bg-gray-50 p-4 border border-gray-200 text-center text-xs text-gray-500">
+                                All caught up! No pending reviews or submissions.
+                            </div>
+                        @else
+                            @foreach($data['pendingAppraisals']['items'] as $item)
+                                <div class="bg-white border border-gray-200 p-4 flex flex-col gap-3">
+                                    <div>
+                                        <p class="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
+                                            {{ $item['status'] === 'DRAFT' ? 'Draft Save' : 'Needs Calibrated Review' }}
+                                        </p>
+                                        <p class="mt-1 text-sm font-bold text-black">{{ $item['employeeName'] }}</p>
+                                        <p class="text-xs text-gray-500">{{ $item['cycleName'] }}</p>
+                                    </div>
+                                    <a href="{{ route('appraisals.show', $item['id']) }}" class="text-center bg-blue-500 hover:bg-blue-600 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer">
+                                        Open Appraisal
+                                    </a>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Budget Impact Summary (CEO/HR Only) -->
+                @if($data['budgetImpact'])
+                    <div class="bg-white border border-gray-200 p-6">
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2 mb-4">
+                            <i data-lucide="pie-chart" class="h-4 w-4 text-blue-500"></i>
+                            Budget Impact
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Hikes Issued</p>
+                                <p class="mt-1 text-xl font-extrabold text-black">{{ $data['budgetImpact']['appraisalCount'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Avg Hike %</p>
+                                <p class="mt-1 text-xl font-extrabold text-blue-500">{{ $data['budgetImpact']['averageHikePercentage'] }}%</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Team Summaries -->
+                @if(!empty($data['teamSummary']))
+                    <div class="bg-white border border-gray-200">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="text-sm font-bold text-black uppercase tracking-wider">Team Summary</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            @foreach($data['teamSummary'] as $team)
+                                <div class="px-6 py-4 flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-semibold text-black">{{ $team['teamName'] }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            Completed: {{ $team['completedCount'] }} / {{ $team['totalAppraisals'] }}
+                                        </p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase">Avg Rating</p>
+                                        <p class="text-sm font-extrabold text-blue-500">{{ $team['averageFinalRating'] ?: 'N/A' }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: HR Admin -->
+    @if($data['viewer']['role'] === 'HR')
+        <div x-show="currentTab === 'hr'" class="space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left 2 Cols: Employee Management Table -->
+                <div class="lg:col-span-2 bg-white border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider">Employees Directory</h3>
+                        <span class="border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">Total: {{ $data['hrData']['employees']['pageInfo']['totalItems'] }}</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-black">
+                            <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3">Code</th>
+                                    <th class="px-6 py-3">Name</th>
+                                    <th class="px-6 py-3">Department</th>
+                                    <th class="px-6 py-3">Designation</th>
+                                    <th class="px-6 py-3">Role</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($data['hrData']['employees']['items'] as $emp)
+                                    <tr class="hover:bg-gray-50/50">
+                                        <td class="px-6 py-4 font-mono text-xs text-blue-500">{{ $emp['employeeCode'] }}</td>
+                                        <td class="px-6 py-4 font-bold text-black">{{ $emp['fullName'] }}</td>
+                                        <td class="px-6 py-4">{{ $emp['department'] }}</td>
+                                        <td class="px-6 py-4 text-gray-600 text-xs">{{ $emp['designation'] }}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                {{ $emp['role'] }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right 1 Col: Active Cycles & Enrollment Window Config -->
+                <div class="space-y-8">
+                    <!-- Active Appraisal Cycles -->
+                    <div class="bg-white border border-gray-200 p-6">
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2 mb-4">
+                            <i data-lucide="refresh-cw" class="h-4 w-4 text-blue-500"></i>
+                            Active Cycles
+                        </h3>
+                        <div class="space-y-4">
+                            @foreach($data['hrData']['activeCycles'] as $cycle)
+                                <div class="bg-white border border-gray-200 p-4 space-y-3">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-black">{{ $cycle['name'] }}</h4>
+                                        <p class="text-xs text-gray-500">{{ $cycle['periodLabel'] }} Cycle ({{ $cycle['appraisalType'] }})</p>
+                                    </div>
+                                    
+                                    <!-- Window Config Form -->
+                                    <form action="{{ route('admin.cycle.window', $cycle['id']) }}" method="POST" class="space-y-2 pt-2 border-t border-gray-200">
+                                        @csrf
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="text-[9px] uppercase font-bold text-gray-500">Start Date</label>
+                                                <input type="date" name="startDate" value="{{ date('Y-m-d', strtotime($cycle['startDate'])) }}"
+                                                    class="block w-full border border-gray-300 py-1.5 px-2 text-xs text-black focus:outline-none focus:border-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="text-[9px] uppercase font-bold text-gray-500">End Date</label>
+                                                <input type="date" name="endDate" value="{{ date('Y-m-d', strtotime($cycle['endDate'])) }}"
+                                                    class="block w-full border border-gray-300 py-1.5 px-2 text-xs text-black focus:outline-none focus:border-blue-500">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="w-full border border-gray-300 bg-white hover:bg-gray-50 py-1.5 text-xs font-bold text-black transition-colors cursor-pointer">
+                                            Update Window
+                                        </button>
+                                    </form>
+
+                                    <!-- Enroll All Actions -->
+                                    <form action="{{ route('admin.cycle.enrollAll', $cycle['id']) }}" method="POST" class="pt-1">
+                                        @csrf
+                                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 py-1.5 text-xs font-bold text-white transition-colors cursor-pointer flex items-center justify-center gap-2">
+                                            <i data-lucide="user-plus" class="h-3.5 w-3.5"></i>
+                                            Enroll All Employees
+                                        </button>
+                                    </form>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Individual Enrollment Assignment -->
+                    <div class="bg-white border border-gray-200 p-6">
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2 mb-4">
+                            <i data-lucide="user-check" class="h-4 w-4 text-blue-500"></i>
+                            Assign to Cycle
+                        </h3>
+                        <form action="{{ route('admin.cycle.assign') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label for="employeeId" class="block text-xs font-semibold text-black">Select Employee</label>
+                                <select id="employeeId" name="employeeId" required
+                                    class="mt-1 block w-full border border-gray-300 py-2 px-3 text-black focus:outline-none focus:border-blue-500 text-sm">
+                                    <option value="">-- Choose Employee --</option>
+                                    @foreach($data['hrData']['allEmployees'] as $empOption)
+                                        <option value="{{ $empOption['id'] }}">{{ $empOption['fullName'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="cycleId" class="block text-xs font-semibold text-black">Select Cycle</label>
+                                <select id="cycleId" name="cycleId" required
+                                    class="mt-1 block w-full border border-gray-300 py-2 px-3 text-black focus:outline-none focus:border-blue-500 text-sm">
+                                    <option value="">-- Choose Cycle --</option>
+                                    @foreach($data['hrData']['activeCycles'] as $cOption)
+                                        <option value="{{ $cOption['id'] }}">{{ $cOption['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 py-2 px-4 text-xs font-bold text-white transition-all cursor-pointer">
+                                Assign Employee
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
+@endsection
