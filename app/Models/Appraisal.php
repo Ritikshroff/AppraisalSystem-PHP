@@ -17,16 +17,22 @@ class Appraisal extends Model
         'teamId',
         'cycleId',
         'managerId',
-        'ceoId',
+        'buHeadId',
         'type',
+        'grade',
         'appraisalPeriod',
         'status',
         'sectionOneAnswers',
         'managerReview',
-        'ceoReview',
+        'buHeadReview',
         'managerOverallRating',
         'finalRating',
         'hikePercentage',
+        'promotionRecommended',
+        'adjustments',
+        'incrementAmount',
+        'newCtc',
+        'justification',
         'aiPerformanceSummary',
         'sentimentLabel',
         'sentimentScore',
@@ -35,9 +41,12 @@ class Appraisal extends Model
         'aiRiskSignals',
         'employeeSubmittedAt',
         'managerSubmittedAt',
-        'ceoSubmittedAt',
+        'buHeadSubmittedAt',
         'analyzedAt',
         'deadlineAt',
+        'specialAppeal',
+        'specialAppealStatus',
+        'specialAppealComments',
     ];
 
     protected $casts = [
@@ -47,9 +56,14 @@ class Appraisal extends Model
         'sentimentScore' => 'double',
         'employeeSubmittedAt' => 'datetime',
         'managerSubmittedAt' => 'datetime',
-        'ceoSubmittedAt' => 'datetime',
+        'buHeadSubmittedAt' => 'datetime',
         'analyzedAt' => 'datetime',
         'deadlineAt' => 'datetime',
+        'promotionRecommended' => 'boolean',
+        'adjustments' => 'double',
+        'incrementAmount' => 'double',
+        'newCtc' => 'double',
+        'specialAppeal' => 'boolean',
     ];
 
     public function employee(): BelongsTo
@@ -72,9 +86,9 @@ class Appraisal extends Model
         return $this->belongsTo(Employee::class, 'managerId');
     }
 
-    public function ceo(): BelongsTo
+    public function buHead(): BelongsTo
     {
-        return $this->belongsTo(Employee::class, 'ceoId');
+        return $this->belongsTo(Employee::class, 'buHeadId');
     }
 
     public function kras(): HasMany
@@ -85,5 +99,10 @@ class Appraisal extends Model
     public function skillRatings(): HasMany
     {
         return $this->hasMany(SkillRating::class, 'appraisalId')->orderBy('displayOrder', 'asc');
+    }
+
+    public function nextCycleKras(): HasMany
+    {
+        return $this->hasMany(NextCycleKra::class, 'appraisalId')->orderBy('displayOrder', 'asc');
     }
 }

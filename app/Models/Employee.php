@@ -19,16 +19,23 @@ class Employee extends Model
         'email',
         'department',
         'designation',
+        'grade',
         'role',
         'teamId',
         'managerId',
         'doj',
+        'dob',
+        'companyExperienceYears',
+        'totalExperienceYears',
         'salary',
         'lastHike',
+        'lastPromotionDate',
     ];
 
     protected $casts = [
         'doj' => 'datetime',
+        'companyExperienceYears' => 'double',
+        'totalExperienceYears' => 'double',
         'salary' => 'double',
         'lastHike' => 'double',
     ];
@@ -65,6 +72,6 @@ class Employee extends Model
 
     public function approvedAppraisals(): HasMany
     {
-        return $this->hasMany(Appraisal::class, 'ceoId');
+        return $this->hasMany(Appraisal::class, 'buHeadId');
     }
 }

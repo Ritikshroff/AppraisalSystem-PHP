@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Appraisal;
 
+use App\Http\Controllers\Controller;
 use App\Services\AppraisalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class AppraisalController extends Controller
             abort(404, 'Appraisal not found or access denied.');
         }
 
-        return view('appraisals.show', compact('appraisal'));
+        return view('appraisal.show', compact('appraisal'));
     }
 
     public function save(Request $request, string $id)
@@ -55,8 +56,8 @@ class AppraisalController extends Controller
             $payload['managerReview'] = $request->input('managerReview');
         }
 
-        if ($request->has('ceoReview')) {
-            $payload['ceoReview'] = $request->input('ceoReview');
+        if ($request->has('buHeadReview')) {
+            $payload['buHeadReview'] = $request->input('buHeadReview');
         }
 
         try {

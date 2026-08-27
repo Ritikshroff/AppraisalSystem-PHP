@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Appraisal;
 
+use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Team;
 use App\Models\User;
@@ -18,7 +19,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect('/');
         }
-        return view('auth.login');
+        return view('appraisal.login');
     }
 
     public function login(Request $request)
@@ -52,7 +53,7 @@ class AuthController extends Controller
         }
 
         $teams = Team::orderBy('name', 'asc')->get(['id', 'name']);
-        return view('auth.signup', compact('teams'));
+        return view('appraisal.signup', compact('teams'));
     }
 
     public function signup(Request $request)
@@ -63,27 +64,27 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8'],
             'teamId' => ['nullable', 'string'],
             'designation' => ['required', 'string', 'max:255'],
-            'role' => ['required', 'string', 'in:EMPLOYEE,MANAGER,CEO'],
+            'role' => ['required', 'string', 'in:EMPLOYEE,MANAGER,BU_HEAD'],
         ]);
 
         $role = strtoupper($validated['role']);
         $email = strtolower(trim($validated['email']));
 
-        if ($role !== 'CEO' && empty($validated['teamId'])) {
+        if ($role !== 'BU_HEAD' && empty($validated['teamId'])) {
             return back()->withErrors(['teamId' => 'A team is required for employee and manager accounts.'])->withInput();
         }
 
-        // Check if CEO already exists
-        if ($role === 'CEO') {
-            $existingCeo = User::where('role', 'CEO')->first();
-            if ($existingCeo) {
-                return back()->withErrors(['role' => 'A CEO account already exists. Use the existing CEO login.'])->withInput();
+        // Check if BU Head already exists
+        if ($role === 'BU_HEAD') {
+            $existingBuHead = User::where('role', 'BU_HEAD')->first();
+            if ($existingBuHead) {
+                return back()->withErrors(['role' => 'A BU Head account already exists. Use the existing BU Head login.'])->withInput();
             }
         }
 
         // Check selected team
         $team = null;
-        if ($role !== 'CEO') {
+        if ($role !== 'BU_HEAD') {
             $team = Team::find($validated['teamId']);
             if (!$team) {
                 return back()->withErrors(['teamId' => 'Selected team was not found.'])->withInput();
@@ -105,7 +106,7 @@ class AuthController extends Controller
                 $roleCount = Employee::where('role', $role)->count();
                 
                 $employeeCode = match ($role) {
-                    'CEO' => 'CEO-' . str_pad($roleCount + 1, 4, '0', STR_PAD_LEFT),
+                    'BU_HEAD' => 'BUH-' . str_pad($roleCount + 1, 4, '0', STR_PAD_LEFT),
                     'MANAGER' => 'MGR-' . str_pad($roleCount + 1001, 4, '0', STR_PAD_LEFT),
                     default => 'EMP-' . str_pad($roleCount + 2001, 4, '0', STR_PAD_LEFT),
                 };
@@ -115,10 +116,10 @@ class AuthController extends Controller
                     'employeeCode' => $employeeCode,
                     'fullName' => trim($validated['fullName']),
                     'email' => $email,
-                    'department' => ($role === 'CEO') ? 'Executive' : ($team->name ?? 'General'),
+                    'department' => ($role === 'BU_HEAD') ? 'Executive' : ($team->name ?? 'General'),
                     'designation' => trim($validated['designation']),
                     'role' => $role,
-                    'teamId' => ($role === 'CEO') ? null : ($team->id ?? null),
+                    'teamId' => ($role === 'BU_HEAD') ? null : ($team->id ?? null),
                     'managerId' => ($role === 'EMPLOYEE' && $team) ? $team->managerId : null,
                 ]);
 
@@ -128,7 +129,7 @@ class AuthController extends Controller
                     'passwordHash' => Hash::make($validated['password']),
                     'name' => trim($validated['fullName']),
                     'role' => $role,
-                    'teamId' => ($role === 'CEO') ? null : ($team->id ?? null),
+                    'teamId' => ($role === 'BU_HEAD') ? null : ($team->id ?? null),
                     'employeeId' => $employee->id,
                 ]);
 

@@ -79,7 +79,7 @@ class AppraisalTest extends TestCase
         $response->assertSee('HR Panel');
     }
 
-    public function test_ceo_can_access_dashboard(): void
+    public function test_bu_head_can_access_dashboard(): void
     {
         $user = User::where('email', 'meera.kapoor@cmrsl.example')->first();
         

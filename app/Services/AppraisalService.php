@@ -58,12 +58,17 @@ class AppraisalService
             'teamName' => $team ? $team->name : null,
             'managerId' => $employee->managerId,
             'managerName' => $manager ? $manager->fullName : null,
-            'finalReviewerName' => null, // ceo placeholder
+            'finalReviewerName' => null, // buHead placeholder
             'doj' => $employee->doj ? $employee->doj->toIso8601String() : null,
             'salary' => $employee->salary,
             'lastHike' => $employee->lastHike,
             'activeCycleName' => null,
             'appraisalId' => null,
+            'grade' => $employee->grade,
+            'dob' => $employee->dob,
+            'companyExperienceYears' => $employee->companyExperienceYears,
+            'totalExperienceYears' => $employee->totalExperienceYears,
+            'lastPromotionDate' => $employee->lastPromotionDate ? $employee->lastPromotionDate->toIso8601String() : null,
         ];
     }
 
@@ -133,7 +138,7 @@ class AppraisalService
 
     private static function isAllowedToView(User $user, Appraisal $appraisal): bool
     {
-        if ($user->role === 'CEO' || $user->role === 'HR') {
+        if ($user->role === 'BU_HEAD' || $user->role === 'HR') {
             return true;
         }
 
@@ -149,15 +154,42 @@ class AppraisalService
         $status = strtoupper($appraisal->status);
 
         if ($user->role === 'EMPLOYEE') {
-            return ($status === 'DRAFT' && $user->employeeId === $appraisal->employeeId);
+            if ($status === 'DRAFT' && $user->employeeId === $appraisal->employeeId) {
+                return true;
+            }
+            if ($status === 'COMPLETED' && $user->employeeId === $appraisal->employeeId && !$appraisal->specialAppeal) {
+                return true;
+            }
+            return false;
         }
 
         if ($user->role === 'MANAGER') {
-            return ($status === 'SUBMITTED' && $user->employeeId === $appraisal->managerId);
+            if ($status === 'SUBMITTED' && $user->employeeId === $appraisal->managerId) {
+                return true;
+            }
+            if ($status === 'COMPLETED' && $user->employeeId === $appraisal->managerId) {
+                if ($appraisal->buHeadSubmittedAt && now()->diffInDays($appraisal->buHeadSubmittedAt) <= 30) {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        if ($user->role === 'CEO') {
-            return ($status === 'MANAGER_REVIEW');
+        if ($user->role === 'BU_HEAD') {
+            if ($status === 'MANAGER_REVIEW') {
+                return true;
+            }
+            if ($status === 'COMPLETED' && $appraisal->specialAppeal) {
+                return true;
+            }
+            return false;
+        }
+
+        if ($user->role === 'HR') {
+            if ($status === 'COMPLETED' && $appraisal->specialAppeal) {
+                return true;
+            }
+            return false;
         }
 
         return false;
@@ -189,7 +221,7 @@ class AppraisalService
 
         $canEditEmployeeSection = ($role === 'EMPLOYEE' && $status === 'DRAFT' && $user->employeeId === $appraisal->employeeId);
         $canEditManagerSection = ($role === 'MANAGER' && $status === 'SUBMITTED' && $user->employeeId === $appraisal->managerId);
-        $canEditCEOSection = ($role === 'CEO' && $status === 'MANAGER_REVIEW');
+        $canEditBUHeadSection = ($role === 'BU_HEAD' && $status === 'MANAGER_REVIEW');
         $canEditKRASection = $canEditEmployeeSection || $canEditManagerSection;
 
         $nextActionLabel = null;
@@ -197,7 +229,7 @@ class AppraisalService
             $nextActionLabel = match ($role) {
                 'EMPLOYEE' => "Submit Appraisal",
                 'MANAGER' => "Submit Review",
-                'CEO' => "Finalize Appraisal",
+                'BU_HEAD' => "Finalize Appraisal",
                 default => null
             };
         }
@@ -207,7 +239,7 @@ class AppraisalService
             'canSubmit' => $canSubmit,
             'canEditEmployeeSection' => $canEditEmployeeSection,
             'canEditManagerSection' => $canEditManagerSection,
-            'canEditCEOSection' => $canEditCEOSection,
+            'canEditBUHeadSection' => $canEditBUHeadSection,
             'canEditKRASection' => $canEditKRASection,
             'currentStageLabel' => AppraisalHelperService::getCurrentStageLabel($status),
             'nextActionLabel' => $nextActionLabel,
@@ -234,7 +266,7 @@ class AppraisalService
         if ($view === 'my-appraisal') {
             $visibleQuery->where('employeeId', $user->employeeId);
         } else {
-            if ($role === 'CEO' || $role === 'HR') {
+            if ($role === 'BU_HEAD' || $role === 'HR') {
                 // Enterprise access
             } elseif ($role === 'MANAGER') {
                 $visibleQuery->where('teamId', $user->teamId);
@@ -319,24 +351,24 @@ class AppraisalService
                 ['label' => "My Appraisals", 'value' => (string) $counts['total'], 'detail' => "Work and salary appraisals assigned to you."],
                 ['label' => "Draft", 'value' => (string) $counts['draft'], 'detail' => "Appraisals still editable by you."],
                 ['label' => "Pending", 'value' => (string) $counts['submitted'], 'detail' => "Submitted and awaiting manager review."],
-                ['label' => "Final", 'value' => (string) $counts['completed'], 'detail' => "Appraisals finalized by the CEO."],
+                ['label' => "Final", 'value' => (string) $counts['completed'], 'detail' => "Appraisals finalized by the BU Head."],
             ];
         } elseif ($role === 'MANAGER') {
             $metrics = [
                 ['label' => "Team Reviews", 'value' => (string) $counts['total'], 'detail' => "Appraisals in your team portfolio."],
                 ['label' => "Pending Reviews", 'value' => (string) $counts['submitted'], 'detail' => "Employee submissions awaiting your review."],
-                ['label' => "Reviewed", 'value' => (string) $counts['managerReview'], 'detail' => "Manager-reviewed appraisals ready for the CEO."],
+                ['label' => "Reviewed", 'value' => (string) $counts['managerReview'], 'detail' => "Manager-reviewed appraisals ready for the BU Head."],
                 ['label' => "Completed", 'value' => (string) $counts['completed'], 'detail' => "Finalized appraisals in your team."],
             ];
         } else {
             $metrics = [
                 ['label' => "Enterprise Appraisals", 'value' => (string) $counts['total'], 'detail' => "All appraisals across teams and cycles."],
                 ['label' => "Pending Final", 'value' => (string) $counts['managerReview'], 'detail' => "Manager-reviewed appraisals awaiting final decision."],
-                ['label' => "Completed", 'value' => (string) $counts['completed'], 'detail' => "CEO finalized appraisals."],
+                ['label' => "Completed", 'value' => (string) $counts['completed'], 'detail' => "BU Head finalized appraisals."],
             ];
         }
 
-        // Team Summaries (Manager, CEO, HR only)
+        // Team Summaries (Manager, BU Head, HR only)
         $teamSummary = [];
         if ($role !== 'EMPLOYEE') {
             $groupedSummary = Appraisal::query();
@@ -366,9 +398,9 @@ class AppraisalService
             usort($teamSummary, fn($a, $b) => strcmp($a['teamName'], $b['teamName']));
         }
 
-        // Budget Impact (CEO/HR only)
+        // Budget Impact (BU Head/HR only)
         $budgetImpact = null;
-        if ($role === 'CEO' || $role === 'HR') {
+        if ($role === 'BU_HEAD' || $role === 'HR') {
             $budgetStats = Appraisal::where('type', 'SALARY')
                 ->where('status', 'COMPLETED')
                 ->whereNotNull('hikePercentage')
@@ -490,7 +522,7 @@ class AppraisalService
     public static function getAppraisalDetail(string $userId, string $appraisalId): ?array
     {
         $user = self::getUserOrThrow($userId);
-        $appraisal = Appraisal::with(['cycle', 'team.manager', 'team.members', 'employee.manager', 'employee.team', 'manager.team', 'ceo', 'kras', 'skillRatings'])->find($appraisalId);
+        $appraisal = Appraisal::with(['cycle', 'team.manager', 'team.members', 'employee.manager', 'employee.team', 'manager.team', 'buHead', 'kras', 'skillRatings', 'nextCycleKras'])->find($appraisalId);
 
         if (!$appraisal || !self::isAllowedToView($user, $appraisal)) {
             return null;
@@ -509,11 +541,12 @@ class AppraisalService
 
         $sectionOneAnswers = json_decode($appraisal->sectionOneAnswers, true) ?: [];
         $managerReview = json_decode($appraisal->managerReview, true) ?: [];
-        $ceoReview = json_decode($appraisal->ceoReview, true) ?: [];
+        $buHeadReview = json_decode($appraisal->buHeadReview, true) ?: [];
 
         return [
             'id' => $appraisal->id,
             'type' => $appraisal->type,
+            'grade' => $appraisal->grade,
             'appraisalPeriod' => $appraisal->appraisalPeriod,
             'status' => $appraisal->status,
             'cycle' => [
@@ -527,7 +560,7 @@ class AppraisalService
             ],
             'employee' => self::serializeActor($appraisal->employee),
             'manager' => $appraisal->manager ? self::serializeActor($appraisal->manager) : null,
-            'ceo' => $appraisal->ceo ? self::serializeActor($appraisal->ceo) : null,
+            'buHead' => $appraisal->buHead ? self::serializeActor($appraisal->buHead) : null,
             'team' => self::serializeTeam($appraisal->team),
             'sectionOneAnswers' => AppraisalHelperService::normalizeSectionAnswers($sectionOneAnswers),
             'kras' => AppraisalHelperService::ensureKraRows(
@@ -554,13 +587,18 @@ class AppraisalService
                 'overallRating' => $appraisal->managerOverallRating,
                 'comments' => $managerReview['comments'] ?? "",
             ],
-            'ceoReview' => [
-                'comments' => $ceoReview['comments'] ?? "",
+            'buHeadReview' => [
+                'comments' => $buHeadReview['comments'] ?? "",
                 'finalRating' => $appraisal->finalRating,
                 'hikePercentage' => $appraisal->hikePercentage,
             ],
             'finalRating' => $appraisal->finalRating,
             'hikePercentage' => $appraisal->hikePercentage,
+            'promotionRecommended' => $appraisal->promotionRecommended,
+            'adjustments' => $appraisal->adjustments,
+            'incrementAmount' => $appraisal->incrementAmount,
+            'newCtc' => $appraisal->newCtc,
+            'justification' => $appraisal->justification,
             'aiSummary' => $appraisal->aiPerformanceSummary,
             'sentimentLabel' => $appraisal->sentimentLabel,
             'sentimentScore' => $appraisal->sentimentScore,
@@ -570,8 +608,17 @@ class AppraisalService
             'permissions' => $permissions,
             'employeeSubmittedAt' => $appraisal->employeeSubmittedAt ? $appraisal->employeeSubmittedAt->toIso8601String() : null,
             'managerSubmittedAt' => $appraisal->managerSubmittedAt ? $appraisal->managerSubmittedAt->toIso8601String() : null,
-            'ceoSubmittedAt' => $appraisal->ceoSubmittedAt ? $appraisal->ceoSubmittedAt->toIso8601String() : null,
+            'buHeadSubmittedAt' => $appraisal->buHeadSubmittedAt ? $appraisal->buHeadSubmittedAt->toIso8601String() : null,
             'deadlineAt' => $appraisal->deadlineAt ? $appraisal->deadlineAt->toIso8601String() : null,
+            'specialAppeal' => $appraisal->specialAppeal,
+            'specialAppealStatus' => $appraisal->specialAppealStatus,
+            'specialAppealComments' => $appraisal->specialAppealComments,
+            'nextCycleKras' => $appraisal->nextCycleKras->map(fn($item) => [
+                'id' => $item->id,
+                'objective' => $item->objective,
+                'weightage' => $item->weightage,
+                'displayOrder' => $item->displayOrder,
+            ])->toArray(),
             'updatedAt' => $appraisal->updated_at->toIso8601String(),
         ];
     }
@@ -603,115 +650,171 @@ class AppraisalService
             $updates = [];
 
             if ($role === 'EMPLOYEE') {
-                $updates['sectionOneAnswers'] = json_encode(AppraisalHelperService::normalizeSectionAnswers($payload['sectionOneAnswers'] ?? []));
-                $updates['status'] = ($mode === 'submit') ? 'SUBMITTED' : 'DRAFT';
-                $updates['employeeSubmittedAt'] = ($mode === 'submit') ? now() : $appraisal->employeeSubmittedAt;
-
-                if (isset($payload['kras'])) {
-                    Kra::where('appraisalId', $appraisal->id)->delete();
-                    foreach (AppraisalHelperService::ensureKraRows($payload['kras']) as $kraItem) {
-                        Kra::create([
-                            'id' => Str::uuid()->toString(),
-                            'appraisalId' => $appraisal->id,
-                            'objective' => $kraItem['objective'],
-                            'weightage' => $kraItem['weightage'],
-                            'appraiseeRating' => $kraItem['appraiseeRating'],
-                            'appraiserRating' => $kraItem['appraiserRating'],
-                            'comments' => $kraItem['comments'] ?: null,
-                            'displayOrder' => $kraItem['displayOrder'],
-                        ]);
+                if ($appraisal->status === 'COMPLETED') {
+                    if (isset($payload['specialAppeal'])) {
+                        $updates['specialAppeal'] = (bool) $payload['specialAppeal'];
                     }
-                }
+                    if (isset($payload['justification'])) {
+                        $updates['justification'] = trim($payload['justification']);
+                    }
+                    $updates['specialAppealStatus'] = 'PENDING';
+                } else {
+                    $updates['sectionOneAnswers'] = json_encode(AppraisalHelperService::normalizeSectionAnswers($payload['sectionOneAnswers'] ?? []));
+                    $updates['status'] = ($mode === 'submit') ? 'SUBMITTED' : 'DRAFT';
+                    $updates['employeeSubmittedAt'] = ($mode === 'submit') ? now() : $appraisal->employeeSubmittedAt;
 
-                if (isset($payload['skillRatings'])) {
-                    SkillRating::where('appraisalId', $appraisal->id)->delete();
-                    foreach (AppraisalHelperService::defaultSkillRows($payload['skillRatings']) as $skillItem) {
-                        SkillRating::create([
-                            'id' => Str::uuid()->toString(),
-                            'appraisalId' => $appraisal->id,
-                            'skillName' => $skillItem['skillName'],
-                            'employeeRating' => $skillItem['employeeRating'],
-                            'managerRating' => $skillItem['managerRating'],
-                            'displayOrder' => $skillItem['displayOrder'],
-                        ]);
+                    if (isset($payload['kras'])) {
+                        Kra::where('appraisalId', $appraisal->id)->delete();
+                        foreach (AppraisalHelperService::ensureKraRows($payload['kras']) as $kraItem) {
+                            Kra::create([
+                                'id' => Str::uuid()->toString(),
+                                'appraisalId' => $appraisal->id,
+                                'objective' => $kraItem['objective'],
+                                'weightage' => $kraItem['weightage'],
+                                'appraiseeRating' => $kraItem['appraiseeRating'],
+                                'appraiserRating' => $kraItem['appraiserRating'],
+                                'comments' => $kraItem['comments'] ?: null,
+                                'displayOrder' => $kraItem['displayOrder'],
+                            ]);
+                        }
+                    }
+
+                    if (isset($payload['skillRatings'])) {
+                        SkillRating::where('appraisalId', $appraisal->id)->delete();
+                        foreach (AppraisalHelperService::defaultSkillRows($payload['skillRatings']) as $skillItem) {
+                            SkillRating::create([
+                                'id' => Str::uuid()->toString(),
+                                'appraisalId' => $appraisal->id,
+                                'skillName' => $skillItem['skillName'],
+                                'employeeRating' => $skillItem['employeeRating'],
+                                'managerRating' => $skillItem['managerRating'],
+                                'displayOrder' => $skillItem['displayOrder'],
+                            ]);
+                        }
                     }
                 }
             }
 
             if ($role === 'MANAGER') {
-                $overallRating = null;
-                if (isset($payload['managerReview']['overallRating']) && $payload['managerReview']['overallRating'] !== null) {
-                    $overallRating = AppraisalHelperService::roundTo(AppraisalHelperService::clampScale(floatval($payload['managerReview']['overallRating']), 0, 10));
-                }
-
-                $managerReview = [
-                    'overallRating' => $overallRating,
-                    'comments' => isset($payload['managerReview']['comments']) ? trim($payload['managerReview']['comments']) : '',
-                ];
-
-                $updates['managerReview'] = json_encode($managerReview);
-                $updates['managerOverallRating'] = $overallRating;
-                $updates['status'] = ($mode === 'submit') ? 'MANAGER_REVIEW' : $appraisal->status;
-                $updates['managerSubmittedAt'] = ($mode === 'submit') ? now() : $appraisal->managerSubmittedAt;
-
-                if (isset($payload['kras'])) {
-                    Kra::where('appraisalId', $appraisal->id)->delete();
-                    foreach (AppraisalHelperService::ensureKraRows($payload['kras']) as $kraItem) {
-                        Kra::create([
-                            'id' => Str::uuid()->toString(),
-                            'appraisalId' => $appraisal->id,
-                            'objective' => $kraItem['objective'],
-                            'weightage' => $kraItem['weightage'],
-                            'appraiseeRating' => $kraItem['appraiseeRating'],
-                            'appraiserRating' => $kraItem['appraiserRating'],
-                            'comments' => $kraItem['comments'] ?: null,
-                            'displayOrder' => $kraItem['displayOrder'],
-                        ]);
+                if ($appraisal->status === 'COMPLETED') {
+                    if (isset($payload['nextCycleKras'])) {
+                        NextCycleKra::where('appraisalId', $appraisal->id)->delete();
+                        foreach ($payload['nextCycleKras'] as $idx => $kraItem) {
+                            if (!empty($kraItem['objective'])) {
+                                NextCycleKra::create([
+                                    'id' => Str::uuid()->toString(),
+                                    'appraisalId' => $appraisal->id,
+                                    'objective' => trim($kraItem['objective']),
+                                    'weightage' => floatval($kraItem['weightage'] ?? 0),
+                                    'displayOrder' => $idx,
+                                ]);
+                            }
+                        }
                     }
-                }
+                } else {
+                    $overallRating = null;
+                    if (isset($payload['managerReview']['overallRating']) && $payload['managerReview']['overallRating'] !== null) {
+                        $overallRating = AppraisalHelperService::roundTo(AppraisalHelperService::clampScale(floatval($payload['managerReview']['overallRating']), 0, 10));
+                    }
 
-                if (isset($payload['skillRatings'])) {
-                    SkillRating::where('appraisalId', $appraisal->id)->delete();
-                    foreach (AppraisalHelperService::defaultSkillRows($payload['skillRatings']) as $skillItem) {
-                        SkillRating::create([
-                            'id' => Str::uuid()->toString(),
-                            'appraisalId' => $appraisal->id,
-                            'skillName' => $skillItem['skillName'],
-                            'employeeRating' => $skillItem['employeeRating'],
-                            'managerRating' => $skillItem['managerRating'],
-                            'displayOrder' => $skillItem['displayOrder'],
-                        ]);
+                    $managerReview = [
+                        'overallRating' => $overallRating,
+                        'comments' => isset($payload['managerReview']['comments']) ? trim($payload['managerReview']['comments']) : '',
+                    ];
+
+                    $updates['managerReview'] = json_encode($managerReview);
+                    $updates['managerOverallRating'] = $overallRating;
+                    $updates['status'] = ($mode === 'submit') ? 'MANAGER_REVIEW' : $appraisal->status;
+                    $updates['managerSubmittedAt'] = ($mode === 'submit') ? now() : $appraisal->managerSubmittedAt;
+
+                    if (isset($payload['kras'])) {
+                        Kra::where('appraisalId', $appraisal->id)->delete();
+                        foreach (AppraisalHelperService::ensureKraRows($payload['kras']) as $kraItem) {
+                            Kra::create([
+                                'id' => Str::uuid()->toString(),
+                                'appraisalId' => $appraisal->id,
+                                'objective' => $kraItem['objective'],
+                                'weightage' => $kraItem['weightage'],
+                                'appraiseeRating' => $kraItem['appraiseeRating'],
+                                'appraiserRating' => $kraItem['appraiserRating'],
+                                'comments' => $kraItem['comments'] ?: null,
+                                'displayOrder' => $kraItem['displayOrder'],
+                            ]);
+                        }
+                    }
+
+                    if (isset($payload['skillRatings'])) {
+                        SkillRating::where('appraisalId', $appraisal->id)->delete();
+                        foreach (AppraisalHelperService::defaultSkillRows($payload['skillRatings']) as $skillItem) {
+                            SkillRating::create([
+                                'id' => Str::uuid()->toString(),
+                                'appraisalId' => $appraisal->id,
+                                'skillName' => $skillItem['skillName'],
+                                'employeeRating' => $skillItem['employeeRating'],
+                                'managerRating' => $skillItem['managerRating'],
+                                'displayOrder' => $skillItem['displayOrder'],
+                            ]);
+                        }
                     }
                 }
             }
 
-            if ($role === 'CEO') {
-                $finalRating = null;
-                if (isset($payload['ceoReview']['finalRating']) && $payload['ceoReview']['finalRating'] !== null) {
-                    $finalRating = AppraisalHelperService::roundTo(AppraisalHelperService::clampScale(floatval($payload['ceoReview']['finalRating']), 0, 10));
-                }
+            if ($role === 'BU_HEAD' || $role === 'HR') {
+                if ($appraisal->status === 'COMPLETED') {
+                    if (isset($payload['specialAppealStatus'])) {
+                        $updates['specialAppealStatus'] = trim($payload['specialAppealStatus']);
+                    }
+                    if (isset($payload['specialAppealComments'])) {
+                        $updates['specialAppealComments'] = trim($payload['specialAppealComments']);
+                    }
+                } elseif ($role === 'BU_HEAD') {
+                    $finalRating = null;
+                    if (isset($payload['buHeadReview']['finalRating']) && $payload['buHeadReview']['finalRating'] !== null) {
+                        $finalRating = AppraisalHelperService::roundTo(AppraisalHelperService::clampScale(floatval($payload['buHeadReview']['finalRating']), 0, 10));
+                    }
 
-                $hikePercentage = null;
-                if (isset($payload['ceoReview']['hikePercentage']) && $payload['ceoReview']['hikePercentage'] !== null) {
-                    $hikePercentage = AppraisalHelperService::roundTo(AppraisalHelperService::clampScale(floatval($payload['ceoReview']['hikePercentage']), 0, 100));
-                }
+                    $hikePercentage = null;
+                    if (isset($payload['buHeadReview']['hikePercentage']) && $payload['buHeadReview']['hikePercentage'] !== null) {
+                        $hikePercentage = AppraisalHelperService::roundTo(AppraisalHelperService::clampScale(floatval($payload['buHeadReview']['hikePercentage']), 0, 100));
+                    }
 
-                $updates['ceoReview'] = json_encode([
-                    'comments' => isset($payload['ceoReview']['comments']) ? trim($payload['ceoReview']['comments']) : "",
-                    'finalRating' => $finalRating,
-                    'hikePercentage' => $hikePercentage,
-                ]);
-                $updates['finalRating'] = $finalRating;
-                $updates['hikePercentage'] = $hikePercentage;
-                $updates['status'] = ($mode === 'submit') ? 'COMPLETED' : $appraisal->status;
-                $updates['ceoSubmittedAt'] = ($mode === 'submit') ? now() : $appraisal->ceoSubmittedAt;
-                $updates['ceoId'] = $user->employeeId;
+                    $updates['buHeadReview'] = json_encode([
+                        'comments' => isset($payload['buHeadReview']['comments']) ? trim($payload['buHeadReview']['comments']) : "",
+                        'finalRating' => $finalRating,
+                        'hikePercentage' => $hikePercentage,
+                    ]);
+                    $updates['finalRating'] = $finalRating;
+                    $updates['hikePercentage'] = $hikePercentage;
+
+                    if (isset($payload['promotionRecommended'])) {
+                        $updates['promotionRecommended'] = (bool) $payload['promotionRecommended'];
+                    }
+                    if (isset($payload['adjustments'])) {
+                        $updates['adjustments'] = floatval($payload['adjustments']);
+                    }
+                    if (isset($payload['incrementAmount'])) {
+                        $updates['incrementAmount'] = floatval($payload['incrementAmount']);
+                    }
+                    if (isset($payload['newCtc'])) {
+                        $updates['newCtc'] = floatval($payload['newCtc']);
+                    }
+                    if (isset($payload['grade'])) {
+                        $updates['grade'] = trim($payload['grade']);
+                    }
+                    if (isset($payload['justification'])) {
+                        $updates['justification'] = trim($payload['justification']);
+                    }
+
+                    $updates['status'] = ($mode === 'submit') ? 'COMPLETED' : $appraisal->status;
+                    $updates['buHeadSubmittedAt'] = ($mode === 'submit') ? now() : $appraisal->buHeadSubmittedAt;
+                    $updates['buHeadId'] = $user->employeeId;
+                }
             }
 
             $appraisal->update($updates);
         });
 
-        // Trigger AI performance analysis if submitted by Manager/CEO
+        // Trigger AI performance analysis if submitted by Manager/BU Head
         if (strtoupper($user->role) !== 'EMPLOYEE' && $mode === 'submit') {
             self::refreshAnalysis($appraisal->id);
         }
@@ -747,12 +850,12 @@ class AppraisalService
             }
         }
 
-        if ($role === 'CEO') {
+        if ($role === 'BU_HEAD') {
             if (
-                !isset($payload['ceoReview']['finalRating']) || $payload['ceoReview']['finalRating'] === null ||
-                !isset($payload['ceoReview']['hikePercentage']) || $payload['ceoReview']['hikePercentage'] === null
+                !isset($payload['buHeadReview']['finalRating']) || $payload['buHeadReview']['finalRating'] === null ||
+                !isset($payload['buHeadReview']['hikePercentage']) || $payload['buHeadReview']['hikePercentage'] === null
             ) {
-                throw new \Exception("CEO decision requires a final rating and hike percentage.");
+                throw new \Exception("BU Head decision requires a final rating and hike percentage.");
             }
         }
     }
@@ -780,8 +883,8 @@ class AppraisalService
         $managerReview = json_decode($appraisal->managerReview, true) ?: [];
         $managerText = $managerReview['comments'] ?? "";
 
-        $ceoReview = json_decode($appraisal->ceoReview, true) ?: [];
-        $ceoText = $ceoReview['comments'] ?? "";
+        $buHeadReview = json_decode($appraisal->buHeadReview, true) ?: [];
+        $buHeadText = $buHeadReview['comments'] ?? "";
 
         $analysis = GeminiService::generatePerformanceAnalysis([
             'employeeName' => $appraisal->employee->fullName,
@@ -789,7 +892,7 @@ class AppraisalService
             'teamName' => $appraisal->team->name,
             'appraisalType' => $appraisal->type,
             'appraisalPeriod' => $appraisal->appraisalPeriod,
-            'fullText' => implode(" ", array_filter([$sectionText, $kraText, $skillText, $managerText, $ceoText])),
+            'fullText' => implode(" ", array_filter([$sectionText, $kraText, $skillText, $managerText, $buHeadText])),
             'managerOverallRating' => $appraisal->managerOverallRating,
             'finalRating' => $appraisal->finalRating,
         ]);
@@ -808,7 +911,7 @@ class AppraisalService
     public static function updateCycleWindow(string $cycleId, string $startDate, string $endDate, array $user): array
     {
         $role = strtoupper($user['role'] ?? '');
-        if ($role !== 'HR' && $role !== 'CEO') {
+        if ($role !== 'HR') {
             throw new \Exception("Unauthorized");
         }
 
@@ -828,7 +931,7 @@ class AppraisalService
     public static function assignEmployeeToCycle(string $employeeId, string $cycleId, array $user): array
     {
         $role = strtoupper($user['role'] ?? '');
-        if ($role !== 'HR' && $role !== 'CEO') {
+        if ($role !== 'HR') {
             throw new \Exception("Unauthorized");
         }
 
@@ -870,7 +973,7 @@ class AppraisalService
     public static function enrollAllEmployees(string $cycleId, array $user): array
     {
         $role = strtoupper($user['role'] ?? '');
-        if ($role !== 'HR' && $role !== 'CEO') {
+        if ($role !== 'HR') {
             throw new \Exception("Unauthorized");
         }
 
@@ -879,7 +982,7 @@ class AppraisalService
             throw new \Exception("Cycle not found");
         }
 
-        $employees = Employee::where('role', '!=', 'CEO')->get();
+        $employees = Employee::where('role', '!=', 'BU_HEAD')->get();
         $count = 0;
 
         foreach ($employees as $emp) {

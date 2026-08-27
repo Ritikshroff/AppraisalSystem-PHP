@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('department');
             $table->string('designation');
-            $table->string('role')->default('EMPLOYEE'); // EMPLOYEE, MANAGER, CEO, HR
+            $table->string('role')->default('EMPLOYEE'); // EMPLOYEE, MANAGER, BU_HEAD, HR
             $table->string('teamId')->nullable();
             $table->string('managerId')->nullable();
             $table->dateTime('doj')->nullable();
@@ -103,13 +103,13 @@ return new class extends Migration
             $table->string('teamId');
             $table->string('cycleId');
             $table->string('managerId')->nullable();
-            $table->string('ceoId')->nullable();
+            $table->string('buHeadId')->nullable();
             $table->string('type'); // WORK, SALARY
             $table->string('appraisalPeriod');
             $table->string('status')->default('DRAFT'); // DRAFT, SUBMITTED, MANAGER_REVIEW, COMPLETED
             $table->text('sectionOneAnswers')->nullable();
             $table->text('managerReview')->nullable();
-            $table->text('ceoReview')->nullable();
+            $table->text('buHeadReview')->nullable();
             $table->double('managerOverallRating')->nullable();
             $table->double('finalRating')->nullable();
             $table->double('hikePercentage')->nullable();
@@ -121,7 +121,7 @@ return new class extends Migration
             $table->text('aiRiskSignals')->nullable();
             $table->dateTime('employeeSubmittedAt')->nullable();
             $table->dateTime('managerSubmittedAt')->nullable();
-            $table->dateTime('ceoSubmittedAt')->nullable();
+            $table->dateTime('buHeadSubmittedAt')->nullable();
             $table->dateTime('analyzedAt')->nullable();
             $table->dateTime('deadlineAt')->nullable();
             $table->timestamps();
@@ -131,7 +131,7 @@ return new class extends Migration
             $table->foreign('teamId')->references('id')->on('teams')->onDelete('cascade');
             $table->foreign('cycleId')->references('id')->on('appraisal_cycles')->onDelete('cascade');
             $table->foreign('managerId')->references('id')->on('employees')->onDelete('set null');
-            $table->foreign('ceoId')->references('id')->on('employees')->onDelete('set null');
+            $table->foreign('buHeadId')->references('id')->on('employees')->onDelete('set null');
 
             $table->index(['cycleId', 'status']);
             $table->index(['teamId', 'status']);

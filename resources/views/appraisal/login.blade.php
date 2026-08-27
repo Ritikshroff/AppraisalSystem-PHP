@@ -49,7 +49,7 @@
             <div class="mt-6 border-t border-gray-200 pt-6">
                 <p class="text-xs text-center text-gray-500 leading-5">
                     Demo accounts are pre-seeded. You can log in using:
-                    <br><code class="text-gray-800">meera.kapoor@cmrsl.example</code> (CEO)
+                    <br><code class="text-gray-800">meera.kapoor@cmrsl.example</code> (BU Head)
                     <br><code class="text-gray-800">sanjay.mishra@cmrsl.example</code> (HR)
                     <br><code class="text-gray-800">anita.rao@cmrsl.example</code> (MANAGER)
                     <br><code class="text-gray-800">rahul.sharma@cmrsl.example</code> (EMPLOYEE)

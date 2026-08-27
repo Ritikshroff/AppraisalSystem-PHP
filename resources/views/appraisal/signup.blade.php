@@ -10,7 +10,7 @@
             Create a secure role-based account.
         </h1>
         <p class="mt-5 max-w-xl text-sm leading-7 text-gray-600">
-            Roles dictate your workspace capabilities. Team-linked roles (Employees and Managers) stay scoped to their teams, while the CEO runs organization-wide calibrations.
+            Roles dictate your workspace capabilities. Team-linked roles (Employees and Managers) stay scoped to their teams, while the BU Head runs organization-wide calibrations.
         </p>
     </div>
 
@@ -27,7 +27,7 @@
                         class="mt-1 block w-full border border-gray-300 py-2.5 px-3 text-black focus:outline-none focus:border-blue-500 sm:text-sm">
                         <option value="EMPLOYEE">Employee</option>
                         <option value="MANAGER">Manager</option>
-                        <option value="CEO">Chief Executive Officer (CEO)</option>
+                        <option value="BU_HEAD">BU Head</option>
                     </select>
                 </div>
 
@@ -62,7 +62,7 @@
                         class="mt-1 block w-full border border-gray-300 py-2.5 px-3 text-black focus:outline-none focus:border-blue-500 sm:text-sm">
                 </div>
 
-                <div x-show="role !== 'CEO'" x-cloak>
+                <div x-show="role !== 'BU_HEAD'" x-cloak>
                     <label for="teamId" class="block text-sm font-medium text-black">Assigned Team</label>
                     <select id="teamId" name="teamId"
                         class="mt-1 block w-full border border-gray-300 py-2.5 px-3 text-black focus:outline-none focus:border-blue-500 sm:text-sm">

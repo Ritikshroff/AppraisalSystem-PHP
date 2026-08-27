@@ -1,0 +1,17 @@
+- [x] Create database migration for dataset fields (`grade`, `dob`, `companyExperienceYears`, `totalExperienceYears`, `lastPromotionDate` on employees; CTC/adjustments/justification/appeal fields on appraisals)
+- [x] Update `Employee` model fillables and casts
+- [x] Update `Appraisal` model fillables and casts
+- [x] Rename `CEO` to `BU_HEAD` in original migration file `2026_07_23_000001_create_appraisal_tables.php`
+- [x] Rename role checks in `routes/web.php` from `CEO` to `BU_HEAD`
+- [x] Update `AppraisalHelperService.php` mappings (role views, stage labels, submit labels)
+- [x] Update `AppraisalService.php` permission checks, serialization, and mutation logic for `BU_HEAD`
+- [x] Run migrations and verify locally
+- [x] Move all project controllers to `app/Http/Controllers/Appraisal/` and update namespaces
+- [x] Move all view templates to `resources/views/appraisal/` and update controller return paths
+- [x] Create routes in `routes/appraisal.php` and load them from `routes/web.php`
+- [x] Run tests to verify the restructuring works end-to-end
+- [x] Create database migration for `next_cycle_kras` table
+- [x] Create `NextCycleKra` model and configure relationships in `Appraisal` model
+- [x] Load and map `nextCycleKras` inside `AppraisalService`
+- [x] Allow managers to edit and save `nextCycleKras` on completed appraisals within the 1-month window
+- [x] Design Section 7 in `show.blade.php` to display and edit next cycle's KRAs

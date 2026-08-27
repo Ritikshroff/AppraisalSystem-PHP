@@ -3,7 +3,10 @@
 @section('title', 'Dashboard - AppraisalFlow')
 
 @section('content')
-<div class="space-y-8" x-data="{ currentTab: '{{ $data['viewer']['role'] === 'HR' ? 'hr' : 'appraisals' }}' }">
+@php
+    $role = strtoupper($data['viewer']['role'] ?? '');
+@endphp
+<div class="space-y-8" x-data="{ currentTab: '{{ $role === 'HR' ? 'hr' : 'appraisals' }}' }">
     <!-- Header Summary Card -->
     <div class="bg-white border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -19,21 +22,18 @@
         </div>
         
         <!-- Tab switches (only for HR) -->
-        <div class="flex bg-gray-100 p-1 border border-gray-200">
-            @if($data['viewer']['role'] !== 'HR')
+        @if($data['viewer']['role'] === 'HR')
+            <div class="flex bg-gray-100 p-1 border border-gray-200">
                 <button @click="currentTab = 'appraisals'" :class="currentTab === 'appraisals' ? 'bg-blue-500 text-white font-semibold' : 'text-gray-600 hover:text-black'" 
                     class="px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer">
                     Appraisals
                 </button>
-            @endif
-            
-            @if($data['viewer']['role'] === 'HR')
                 <button @click="currentTab = 'hr'" :class="currentTab === 'hr' ? 'bg-blue-500 text-white font-semibold' : 'text-gray-600 hover:text-black'" 
                     class="px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer">
                     HR Panel
                 </button>
-            @endif
-        </div>
+            </div>
+        @endif
     </div>
 
     <!-- Tab: Appraisals -->
@@ -77,47 +77,68 @@
                         <span class="bg-gray-100 border border-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-600">Page {{ $data['visibleAppraisals']['pageInfo']['page'] }}</span>
                     </div>
 
-                    <div class="divide-y divide-gray-200">
-                        @if(empty($data['visibleAppraisals']['items']))
-                            <div class="px-6 py-10 text-center text-gray-500 text-sm">
-                                <i data-lucide="inbox" class="h-8 w-8 mx-auto text-gray-400 mb-2"></i>
-                                No active appraisals found.
-                            </div>
-                        @else
-                            @foreach($data['visibleAppraisals']['items'] as $item)
-                                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-2">
-                                            <a href="{{ route('appraisals.show', $item['id']) }}" class="text-sm font-bold text-blue-500 hover:underline">
-                                                {{ $item['employeeName'] }}
-                                            </a>
-                                            <span class="text-xs text-gray-500">({{ $item['employeeCode'] }})</span>
-                                        </div>
-                                        <p class="text-xs text-gray-600">
-                                            {{ $item['cycleName'] }} &bull; {{ $item['appraisalPeriod'] }} ({{ $item['appraisalType'] }})
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <!-- Sentiment Label -->
-                                        @if($item['sentimentLabel'])
-                                            <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-bold border
-                                                {{ $item['sentimentLabel'] === 'POSITIVE' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200' }}">
-                                                {{ $item['sentimentLabel'] }}
-                                            </span>
-                                        @endif
-
-                                        <!-- Badge Status -->
-                                        <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold border
-                                            {{ $item['status'] === 'DRAFT' ? 'bg-gray-100 text-gray-600 border-gray-200' : '' }}
-                                            {{ $item['status'] === 'SUBMITTED' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
-                                            {{ $item['status'] === 'MANAGER_REVIEW' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
-                                            {{ $item['status'] === 'COMPLETED' ? 'bg-black text-white border-black' : '' }}">
-                                            {{ $item['status'] }}
-                                        </span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @endif
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-black">
+                            <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200 font-mono">
+                                <tr>
+                                    <th class="px-6 py-3">Code</th>
+                                    <th class="px-6 py-3">Name</th>
+                                    <th class="px-6 py-3">Cycle</th>
+                                    @if(in_array($role, ['HR', 'BU_HEAD']))
+                                        <th class="px-6 py-3">Type</th>
+                                    @endif
+                                    <th class="px-6 py-3">Status</th>
+                                    <th class="px-6 py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @if(empty($data['visibleAppraisals']['items']))
+                                    <tr>
+                                        <td colspan="{{ in_array($role, ['HR', 'BU_HEAD']) ? 6 : 5 }}" class="px-6 py-10 text-center text-gray-500 text-sm">
+                                            No active appraisals found.
+                                        </td>
+                                    </tr>
+                                @else
+                                    @foreach($data['visibleAppraisals']['items'] as $item)
+                                        <tr class="hover:bg-gray-50/50 transition-colors">
+                                            <td class="px-6 py-4 font-mono text-xs text-blue-500 font-semibold">{{ $item['employeeCode'] }}</td>
+                                            <td class="px-6 py-4 font-bold text-black">{{ $item['employeeName'] }}</td>
+                                            <td class="px-6 py-4 text-xs text-gray-600">
+                                                {{ $item['cycleName'] }} ({{ $item['appraisalPeriod'] }})
+                                            </td>
+                                            @if(in_array($role, ['HR', 'BU_HEAD']))
+                                                <td class="px-6 py-4 text-xs">
+                                                    <span class="border border-gray-200 bg-gray-50 px-2 py-0.5 rounded-sm font-semibold text-gray-600">
+                                                        {{ $item['appraisalType'] }}
+                                                    </span>
+                                                </td>
+                                            @endif
+                                            <td class="px-6 py-4 text-xs">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-semibold border
+                                                    {{ $item['status'] === 'DRAFT' ? 'bg-gray-100 text-gray-600 border-gray-200' : '' }}
+                                                    {{ $item['status'] === 'SUBMITTED' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
+                                                    {{ $item['status'] === 'MANAGER_REVIEW' ? 'bg-blue-50 text-blue-600 border-blue-200' : '' }}
+                                                    {{ $item['status'] === 'COMPLETED' ? 'bg-black text-white border-black' : '' }}">
+                                                    {{ $item['status'] }}
+                                                </span>
+                                                @if($item['sentimentLabel'])
+                                                    <span class="ml-1 inline-flex items-center px-2 py-0.5 text-[10px] font-bold border
+                                                        {{ $item['sentimentLabel'] === 'POSITIVE' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-100 text-gray-600 border-gray-200' }}">
+                                                        {{ $item['sentimentLabel'] }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <a href="{{ route('appraisals.show', $item['id']) }}" 
+                                                    class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs py-1.5 px-3 transition-colors cursor-pointer rounded-sm">
+                                                    Open
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @endif
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -184,7 +205,7 @@
                     </div>
                 </div>
 
-                <!-- Budget Impact Summary (CEO/HR Only) -->
+                <!-- Budget Impact Summary (BU Head/HR Only) -->
                 @if($data['budgetImpact'])
                     <div class="bg-white border border-gray-200 p-6">
                         <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2 mb-4">

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Appraisal;
 
+use App\Http\Controllers\Controller;
 use App\Services\AppraisalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,6 @@ class DashboardController extends Controller
 
         $data = AppraisalService::getDashboardData($user->id, $options);
 
-        return view('dashboard.index', compact('data'));
+        return view('appraisal.dashboard', compact('data'));
     }
 }

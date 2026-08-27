@@ -78,7 +78,7 @@ class AppraisalHelperService
             case 'SUBMITTED':
                 return "Awaiting Manager Review";
             case 'MANAGER_REVIEW':
-                return "Awaiting CEO Decision";
+                return "Awaiting BU Head Decision";
             case 'COMPLETED':
                 return "Final Decision Completed";
             default:
@@ -93,7 +93,7 @@ class AppraisalHelperService
                 return "Submit Appraisal";
             case 'MANAGER':
                 return "Submit Review";
-            case 'CEO':
+            case 'BU_HEAD':
                 return "Finalize Appraisal";
             default:
                 return null;
@@ -107,8 +107,8 @@ class AppraisalHelperService
                 return "my-appraisal";
             case 'MANAGER':
                 return "team-reviews";
-            case 'CEO':
-                return "ceo-panel";
+            case 'BU_HEAD':
+                return "bu-head-panel";
             case 'HR':
                 return "hr-panel";
             default:
