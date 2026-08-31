@@ -127,4 +127,36 @@ class AppraisalTest extends TestCase
 
         $this->assertNotEquals(403, $response->getStatusCode());
     }
+
+    public function test_manager_can_submit_appraiser_review_with_current_form_fields(): void
+    {
+        $manager = User::where('email', 'anita.rao@cmrsl.example')->first();
+        $this->assertNotNull($manager);
+
+        $appraisal = Appraisal::where('managerId', $manager->employeeId)
+            ->where('status', 'SUBMITTED')
+            ->first();
+        $this->assertNotNull($appraisal);
+
+        $response = $this->actingAs($manager)->post("/appraisals/{$appraisal->id}/submit", [
+            'appraiserSection' => [
+                'overallRating' => '8.4',
+                'recommendation' => 'Strong performance with clear ownership across the cycle.',
+                'newKraNotes' => 'Expand delivery planning responsibilities next cycle.',
+            ],
+        ]);
+
+        $response->assertRedirect("/appraisals/{$appraisal->id}");
+        $response->assertSessionHas('success');
+        $response->assertSessionDoesntHaveErrors();
+
+        $appraisal->refresh();
+
+        $this->assertSame('MANAGER_REVIEW', $appraisal->status);
+        $this->assertSame(8.4, $appraisal->appraiserOverallRating);
+        $this->assertSame('Strong performance with clear ownership across the cycle.', $appraisal->appraiserRecommendation);
+        $this->assertSame('Expand delivery planning responsibilities next cycle.', $appraisal->appraiserNewKraNotes);
+        $this->assertNotNull($appraisal->managerSubmittedAt);
+        $this->assertNotNull($appraisal->appraiserSignedAt);
+    }
 }

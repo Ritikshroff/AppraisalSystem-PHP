@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+
 class Appraisal extends Model
 {
     protected $keyType = 'string';
@@ -26,6 +27,13 @@ class Appraisal extends Model
         'managerReview',
         'buHeadReview',
         'managerOverallRating',
+        // Section 5 — Appraiser fields
+        'appraiserOverallRating',
+        'appraiserRecommendation',
+        'appraiserNewKraNotes',
+        // Section 6 — Reviewer fields
+        'reviewerComments',
+        'reviewerRating',
         'finalRating',
         'hikePercentage',
         'promotionRecommended',
@@ -41,7 +49,9 @@ class Appraisal extends Model
         'aiRiskSignals',
         'employeeSubmittedAt',
         'managerSubmittedAt',
+        'appraiserSignedAt',
         'buHeadSubmittedAt',
+        'reviewerSignedAt',
         'analyzedAt',
         'deadlineAt',
         'specialAppeal',
@@ -50,20 +60,24 @@ class Appraisal extends Model
     ];
 
     protected $casts = [
-        'managerOverallRating' => 'double',
-        'finalRating' => 'double',
-        'hikePercentage' => 'double',
-        'sentimentScore' => 'double',
-        'employeeSubmittedAt' => 'datetime',
-        'managerSubmittedAt' => 'datetime',
-        'buHeadSubmittedAt' => 'datetime',
-        'analyzedAt' => 'datetime',
-        'deadlineAt' => 'datetime',
-        'promotionRecommended' => 'boolean',
-        'adjustments' => 'double',
-        'incrementAmount' => 'double',
-        'newCtc' => 'double',
-        'specialAppeal' => 'boolean',
+        'managerOverallRating'   => 'double',
+        'appraiserOverallRating' => 'double',
+        'reviewerRating'         => 'double',
+        'finalRating'            => 'double',
+        'hikePercentage'         => 'double',
+        'sentimentScore'         => 'double',
+        'employeeSubmittedAt'    => 'datetime',
+        'managerSubmittedAt'     => 'datetime',
+        'appraiserSignedAt'      => 'datetime',
+        'buHeadSubmittedAt'      => 'datetime',
+        'reviewerSignedAt'       => 'datetime',
+        'analyzedAt'             => 'datetime',
+        'deadlineAt'             => 'datetime',
+        'promotionRecommended'   => 'boolean',
+        'adjustments'            => 'double',
+        'incrementAmount'        => 'double',
+        'newCtc'                 => 'double',
+        'specialAppeal'          => 'boolean',
     ];
 
     public function employee(): BelongsTo
@@ -94,6 +108,11 @@ class Appraisal extends Model
     public function kras(): HasMany
     {
         return $this->hasMany(Kra::class, 'appraisalId')->orderBy('displayOrder', 'asc');
+    }
+
+    public function competencyRatings(): HasMany
+    {
+        return $this->hasMany(CompetencyRating::class, 'appraisalId')->orderBy('displayOrder', 'asc');
     }
 
     public function skillRatings(): HasMany

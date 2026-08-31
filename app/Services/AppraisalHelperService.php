@@ -5,13 +5,15 @@ namespace App\Services;
 class AppraisalHelperService
 {
     public const SECTION_ONE_QUESTIONS = [
-        "Has the past year been good/bad/satisfactory or otherwise for you, and why?",
-        "What do you consider to be your most important achievements of the past year?",
-        "What elements of your job do you find most difficult?",
-        "What elements of your job interest you the most, and least?",
-        "What action could be taken to improve your performance in your current position by you, and your boss?",
-        "What sort of training/experiences would benefit you in the next year? Not just job-skills - also your natural strengths and personal passions you'd like to develop - you and your work can benefit from these.",
-        "Mention if you have any grievances/problem/are of dissatisfaction which affect your performance.",
+        "Has the past year been good/bad/satisfactory or otherwise for you, and why? (Overall Year Assessment)",
+        "What do you consider to be your most important achievements of the past year? (Important Achievements)",
+        "What elements of your job do you find most difficult? (Difficult Elements)",
+        "What elements of your job interest you the most? (Most Interesting Aspects)",
+        "What elements of your job interest you the least? (Least Interesting Aspects)",
+        "What action could be taken by you to improve your performance in your current position? (Action by Employee)",
+        "What action/support is expected from your Manager/Boss to improve your performance?",
+        "What sort of training/experiences would benefit you in the next year? Not just job-skills - also your natural strengths and personal passions you'd like to develop - you and your work can benefit from these. (Training / Experiences Required)",
+        "Mention if you have any grievances/problem/are of dissatisfaction which affect your performance. (Grievances / Dissatisfaction)",
     ];
 
     public const DEFAULT_SKILLS = [
@@ -20,6 +22,25 @@ class AppraisalHelperService
         "Problem Solving",
         "Ownership",
         "Stakeholder Management",
+    ];
+
+    /**
+     * The 11 capability/competency areas for Section 4.
+     * Both Employee (Appraisee) and Appraiser score each on a 1–10 scale.
+     * Rating guide: 1–3 = Poor | 4–6 = Satisfactory | 7–9 = Good | 10 = Excellent
+     */
+    public const DEFAULT_COMPETENCIES = [
+        'Product / Technical Knowledge',
+        'Time Management',
+        'Work Planning',
+        'Reporting and Administration',
+        'Communication Skills',
+        'Delegation Skills',
+        'Meeting Deadlines / Commitments',
+        'Creativity',
+        'Problem-Solving and Decision-Making',
+        'Steadiness Under Pressure',
+        'Leadership and Integrity',
     ];
 
     public static function roundTo(float $value, int $digits = 2): float
@@ -132,6 +153,36 @@ class AppraisalHelperService
         return $normalized;
     }
 
+    /**
+     * Build the default list of competency rows, merging existing DB values.
+     * Ensures all 11 competencies always appear in the correct order.
+     */
+    public static function defaultCompetencyRows(?array $existing): array
+    {
+        $mapped = [];
+        foreach (self::DEFAULT_COMPETENCIES as $index => $name) {
+            $existingItem = null;
+            if (is_array($existing)) {
+                foreach ($existing as $item) {
+                    if (isset($item['competencyName']) && $item['competencyName'] === $name) {
+                        $existingItem = $item;
+                        break;
+                    }
+                }
+            }
+
+            $mapped[] = [
+                'id'             => $existingItem['id'] ?? null,
+                'competencyName' => $name,
+                'employeeScore'  => $existingItem['employeeScore'] ?? null,
+                'appraiserScore' => $existingItem['appraiserScore'] ?? null,
+                'displayOrder'   => $index,
+            ];
+        }
+
+        return $mapped;
+    }
+
     public static function defaultSkillRows(?array $existing): array
     {
         $mappedDefaults = [];
@@ -170,6 +221,34 @@ class AppraisalHelperService
         return array_merge($mappedDefaults, $customRows);
     }
 
+    public static function gradeToNumeric(?string $grade): ?float
+    {
+        if ($grade === null || $grade === '') {
+            return null;
+        }
+        $upper = strtoupper(trim($grade));
+        return match ($upper) {
+            'A+' => 10.0,
+            'A' => 8.5,
+            'B+' => 7.5,
+            'B' => 6.5,
+            'C' => 5.0,
+            'D' => 3.0,
+            default => is_numeric($grade) ? floatval($grade) : null
+        };
+    }
+
+    public static function numericToGrade(?float $val): string
+    {
+        if ($val === null) return '';
+        if ($val >= 9.5) return 'A+';
+        if ($val >= 8.0) return 'A';
+        if ($val >= 7.0) return 'B+';
+        if ($val >= 6.0) return 'B';
+        if ($val >= 4.5) return 'C';
+        return 'D';
+    }
+
     public static function ensureKraRows(?array $rows): array
     {
         if (is_array($rows) && count($rows) > 0) {
@@ -177,12 +256,12 @@ class AppraisalHelperService
             foreach ($rows as $index => $row) {
                 $appraiseeRating = null;
                 if (isset($row['appraiseeRating']) && $row['appraiseeRating'] !== null && $row['appraiseeRating'] !== '') {
-                    $appraiseeRating = self::roundTo(self::clampScale(floatval($row['appraiseeRating']), 0.0, 10.0));
+                    $appraiseeRating = self::gradeToNumeric($row['appraiseeRating']);
                 }
 
                 $appraiserRating = null;
                 if (isset($row['appraiserRating']) && $row['appraiserRating'] !== null && $row['appraiserRating'] !== '') {
-                    $appraiserRating = self::roundTo(self::clampScale(floatval($row['appraiserRating']), 0.0, 10.0));
+                    $appraiserRating = self::gradeToNumeric($row['appraiserRating']);
                 }
 
                 $ensured[] = [
@@ -191,6 +270,7 @@ class AppraisalHelperService
                     'weightage' => isset($row['weightage']) ? self::roundTo(self::clampScale(floatval($row['weightage']), 0.0, 100.0)) : 0.0,
                     'appraiseeRating' => $appraiseeRating,
                     'appraiserRating' => $appraiserRating,
+                    'appraiseeComment' => isset($row['appraiseeComment']) ? trim($row['appraiseeComment']) : "",
                     'comments' => isset($row['comments']) ? trim($row['comments']) : "",
                     'displayOrder' => $index,
                 ];
@@ -204,6 +284,7 @@ class AppraisalHelperService
                 'weightage' => 0.0,
                 'appraiseeRating' => null,
                 'appraiserRating' => null,
+                'appraiseeComment' => "",
                 'comments' => "",
                 'displayOrder' => 0,
             ]

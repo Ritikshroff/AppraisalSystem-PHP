@@ -40,24 +40,35 @@ class AppraisalController extends Controller
             'appraisalId' => $id,
         ];
 
-        if ($request->has('sectionOneAnswers')) {
-            $payload['sectionOneAnswers'] = $request->input('sectionOneAnswers');
+        foreach ([
+            'sectionOneAnswers',
+            'kras',
+            'skillRatings',
+            'competencyRatings',
+            'managerReview',
+            'appraiserSection',
+            'reviewerSection',
+            'buHeadReview',
+        ] as $key) {
+            if ($request->has($key)) {
+                $payload[$key] = $request->input($key);
+            }
         }
 
-        if ($request->has('kras')) {
-            $payload['kras'] = $request->input('kras');
-        }
-
-        if ($request->has('skillRatings')) {
-            $payload['skillRatings'] = $request->input('skillRatings');
-        }
-
-        if ($request->has('managerReview')) {
-            $payload['managerReview'] = $request->input('managerReview');
-        }
-
-        if ($request->has('buHeadReview')) {
-            $payload['buHeadReview'] = $request->input('buHeadReview');
+        foreach ([
+            'promotionRecommended',
+            'adjustments',
+            'incrementAmount',
+            'newCtc',
+            'grade',
+            'justification',
+            'specialAppealStatus',
+            'specialAppealComments',
+            'specialAppeal',
+        ] as $key) {
+            if ($request->has($key)) {
+                $payload[$key] = $request->input($key);
+            }
         }
 
         try {

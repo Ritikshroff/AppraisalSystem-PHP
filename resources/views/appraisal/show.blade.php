@@ -23,70 +23,7 @@
     $status = strtoupper($appraisal['status'] ?? '');
 @endphp
 
-<div class="space-y-8" 
-     x-data="{
-        kras: @json($appraisal['kras'] ?? []),
-        skills: @json($appraisal['skillRatings'] ?? []),
-        nextCycleKras: @json($appraisal['nextCycleKras'] ?? []),
-        
-        addKra() {
-            this.kras.push({
-                objective: '',
-                weightage: 0,
-                appraiseeRating: null,
-                appraiserRating: null,
-                comments: '',
-                displayOrder: this.kras.length
-            });
-        },
-        removeKra(index) {
-            this.kras.splice(index, 1);
-        },
-        addNextCycleKra() {
-            this.nextCycleKras.push({
-                objective: '',
-                weightage: 0,
-                displayOrder: this.nextCycleKras.length
-            });
-        },
-        removeNextCycleKra(index) {
-            this.nextCycleKras.splice(index, 1);
-        },
-        get totalWeightage() {
-            return this.kras.reduce(function(sum, item) {
-                return sum + parseFloat(item.weightage || 0);
-            }, 0);
-        },
-        get totalNextCycleWeightage() {
-            return this.nextCycleKras.reduce(function(sum, item) {
-                return sum + parseFloat(item.weightage || 0);
-            }, 0);
-        },
-        get appraiseeKraAverage() {
-            var ratings = this.kras.map(function(i) {
-                return i.appraiseeRating;
-            }).filter(function(r) {
-                return r !== null && r !== '';
-            });
-            if(!ratings.length) return 'N/A';
-            var total = ratings.reduce(function(sum, r) {
-                return sum + parseFloat(r);
-            }, 0);
-            return (total / ratings.length).toFixed(2);
-        },
-        get appraiserKraAverage() {
-            var ratings = this.kras.map(function(i) {
-                return i.appraiserRating;
-            }).filter(function(r) {
-                return r !== null && r !== '';
-            });
-            if(!ratings.length) return 'N/A';
-            var total = ratings.reduce(function(sum, r) {
-                return sum + parseFloat(r);
-            }, 0);
-            return (total / ratings.length).toFixed(2);
-        }
-     }">
+<div class="space-y-8" x-data="appraisalForm()">
      
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-xs text-gray-500">
@@ -143,47 +80,65 @@
     <!-- Employee Metadata Grid -->
     <div class="bg-white border border-gray-200 p-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Department</span>
-            <span class="text-black font-semibold mt-1 block">{{ $appraisal['employee']['department'] ?? 'N/A' }}</span>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Employee Name</span>
+            <span class="text-black font-semibold mt-1 block text-sm">{{ $appraisal['employee']['fullName'] }}</span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Designation</span>
-            <span class="text-black font-semibold mt-1 block">{{ $appraisal['employee']['designation'] ?? 'N/A' }}</span>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Designation</span>
+            <span class="text-black font-semibold mt-1 block text-sm">{{ $appraisal['employee']['designation'] ?? 'N/A' }}</span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Grade</span>
-            <span class="text-black font-semibold mt-1 block">{{ $appraisal['employee']['grade'] ?? 'N/A' }}</span>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Grade</span>
+            <span class="text-black font-semibold mt-1 block text-sm font-mono">{{ $appraisal['employee']['grade'] ?? 'N/A' }}</span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Date of Joining</span>
-            <span class="text-black font-semibold mt-1 block">
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Department</span>
+            <span class="text-black font-semibold mt-1 block text-sm">{{ $appraisal['employee']['department'] ?? 'N/A' }}</span>
+        </div>
+        <div>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Date of Joining</span>
+            <span class="text-black font-semibold mt-1 block text-sm">
                 {{ $appraisal['employee']['doj'] ? \Carbon\Carbon::parse($appraisal['employee']['doj'])->format('M d, Y') : 'N/A' }}
             </span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Experience in Company</span>
-            <span class="text-black font-semibold mt-1 block">
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Experience in Company</span>
+            <span class="text-black font-semibold mt-1 block text-sm">
                 {{ $appraisal['employee']['companyExperienceYears'] !== null ? number_format($appraisal['employee']['companyExperienceYears'], 1) . ' years' : 'N/A' }}
             </span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Total Experience</span>
-            <span class="text-black font-semibold mt-1 block">
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Total Experience</span>
+            <span class="text-black font-semibold mt-1 block text-sm">
                 {{ $appraisal['employee']['totalExperienceYears'] !== null ? number_format($appraisal['employee']['totalExperienceYears'], 1) . ' years' : 'N/A' }}
             </span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Last Promotion Date</span>
-            <span class="text-black font-semibold mt-1 block">
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Last Promotion Date</span>
+            <span class="text-black font-semibold mt-1 block text-sm">
                 {{ $appraisal['employee']['lastPromotionDate'] ? \Carbon\Carbon::parse($appraisal['employee']['lastPromotionDate'])->format('M d, Y') : 'N/A' }}
             </span>
         </div>
         <div>
-            <span class="text-gray-400 font-bold uppercase tracking-wider block">Current CTC</span>
-            <span class="text-black font-semibold mt-1 block">
-                {{ $appraisal['employee']['salary'] !== null ? 'INR ' . number_format($appraisal['employee']['salary']) : 'N/A' }}
-            </span>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Appraisal Type</span>
+            <span class="text-blue-500 font-bold mt-1 block text-sm font-mono">{{ $appraisal['type'] }}</span>
         </div>
+        <div>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Appraiser</span>
+            <span class="text-black font-semibold mt-1 block text-sm">{{ $appraisal['manager']['fullName'] ?? 'N/A' }}</span>
+        </div>
+        <div>
+            <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Reviewer</span>
+            <span class="text-black font-semibold mt-1 block text-sm">{{ $appraisal['buHead']['fullName'] ?? 'N/A' }}</span>
+        </div>
+        @if(in_array($role, ['HR', 'BU_HEAD']))
+            <div>
+                <span class="text-gray-400 font-bold uppercase tracking-wider block font-sans">Current CTC</span>
+                <span class="text-green-600 font-bold mt-1 block text-sm">
+                    {{ $appraisal['employee']['salary'] !== null ? 'INR ' . number_format($appraisal['employee']['salary']) : 'N/A' }}
+                </span>
+            </div>
+        @endif
     </div>
 
     <!-- Mutate Form Wrapping All Input Elements -->
@@ -288,13 +243,13 @@
                                 </label>
                                 <input type="hidden" name="sectionOneAnswers[{{ $index }}][question]" value="{{ $qa['question'] }}">
                                 @if($perms['canEditEmployeeSection'])
-                                    <textarea name="sectionOneAnswers[{{ $index }}][answer]" rows="3"
-                                        class="block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300"
-                                        placeholder="Type your response here...">{{ $qa['answer'] }}</textarea>
+                                    <textarea name="sectionOneAnswers[{{ $index }}][answer]"
+                                        class="block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-350 min-h-[120px] resize-none overflow-y-auto"
+                                        placeholder="Type your detailed response here (no word limit)...">{{ $qa['answer'] }}</textarea>
                                 @else
-                                    <p class="bg-gray-50 border border-gray-200 p-4 text-sm text-black leading-relaxed">
+                                    <div class="bg-gray-50 border border-gray-200 p-4 text-sm text-black leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
                                         {{ $qa['answer'] ?: 'No response provided.' }}
-                                    </p>
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
@@ -308,7 +263,7 @@
                             <i data-lucide="target" class="h-4 w-4 text-blue-500"></i>
                             Key Responsibility Areas (KRAs)
                         </h3>
-                        @if($perms['canEditEmployeeSection'])
+                        @if($perms['canEditEmployeeSection'] && $role !== 'EMPLOYEE')
                             <button type="button" @click="addKra()"
                                 class="border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1 text-xs font-bold text-black transition-colors cursor-pointer">
                                 + Add KRA
@@ -319,18 +274,14 @@
                     <!-- Dynamic KRA Rows Table -->
                     <div class="overflow-x-auto border border-gray-200">
                         <table class="w-full text-left text-sm text-black">
-                            <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                            <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
                                 <tr>
-                                    <th class="px-4 py-3">KRA Objectives</th>
-                                    <th class="px-4 py-3 w-20 text-center">Weight %</th>
-                                    <th class="px-4 py-3 w-24 text-center">Self (1-10)</th>
-                                    <th class="px-4 py-3 w-24 text-center">Mgr (1-10)</th>
-                                    @if($perms['canEditManagerSection'] || $status !== 'DRAFT')
-                                        <th class="px-4 py-3">Manager Comments</th>
-                                    @endif
-                                    @if($perms['canEditEmployeeSection'])
-                                        <th class="px-4 py-3 w-10 text-center"></th>
-                                    @endif
+                                    <th class="px-4 py-3">Objective / KRA / KPI</th>
+                                    <th class="px-4 py-3 w-24 text-center">Weight %</th>
+                                    <th class="px-4 py-3 w-32 text-center">Rating — Appraisee</th>
+                                    <th class="px-4 py-3">Comment — Appraisee</th>
+                                    <th class="px-4 py-3 w-32 text-center">Rating — Appraiser</th>
+                                    <th class="px-4 py-3">Comment — Appraiser</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -339,79 +290,300 @@
                                         <!-- Objective Column -->
                                         <td class="px-4 py-3">
                                             <input type="hidden" :name="'kras[' + index + '][id]'" :value="kra.id">
-                                            <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <template x-if="'{{ $role }}' === 'EMPLOYEE' || !{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                                <div>
+                                                    <span class="text-xs font-semibold text-black" x-text="kra.objective"></span>
+                                                    <input type="hidden" :name="'kras[' + index + '][objective]'" :value="kra.objective">
+                                                </div>
+                                            </template>
+                                            <template x-if="'{{ $role }}' !== 'EMPLOYEE' && {{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                                 <input type="text" :name="'kras[' + index + '][objective]'" x-model="kra.objective" required
                                                     class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500">
-                                            </template>
-                                            <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <span class="text-xs font-semibold text-black" x-text="kra.objective"></span>
                                             </template>
                                         </td>
                                         <!-- Weightage Column -->
                                         <td class="px-4 py-3 text-center">
-                                            <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <template x-if="'{{ $role }}' === 'EMPLOYEE' || !{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                                <div>
+                                                    <span class="text-xs font-bold text-gray-700" x-text="kra.weightage + '%'"></span>
+                                                    <input type="hidden" :name="'kras[' + index + '][weightage]'" :value="kra.weightage">
+                                                </div>
+                                            </template>
+                                            <template x-if="'{{ $role }}' !== 'EMPLOYEE' && {{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                                 <input type="number" min="0" max="100" step="1" :name="'kras[' + index + '][weightage]'" x-model="kra.weightage" required
                                                     class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
                                             </template>
-                                            <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <span class="text-xs font-bold text-gray-700" x-text="kra.weightage + '%'"></span>
-                                            </template>
                                         </td>
-                                        <!-- Appraisee Rating Column -->
+                                        <!-- Appraisee Rating Column (Dropdown for Employee, text for others) -->
                                         <td class="px-4 py-3 text-center">
                                             <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <input type="number" min="1" max="10" step="0.1" :name="'kras[' + index + '][appraiseeRating]'" x-model="kra.appraiseeRating" required
-                                                    class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
+                                                <select :name="'kras[' + index + '][appraiseeRating]'" x-model="kra.appraiseeRating" required
+                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center">
+                                                    <option value="">Select</option>
+                                                    <option value="A+">A+</option>
+                                                    <option value="A">A</option>
+                                                    <option value="B+">B+</option>
+                                                    <option value="B">B</option>
+                                                    <option value="C">C</option>
+                                                    <option value="D">D</option>
+                                                </select>
                                             </template>
                                             <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <span class="text-xs font-bold text-blue-500" x-text="kra.appraiseeRating || '-'"></span>
+                                                <div>
+                                                    <span class="text-xs font-bold text-blue-500" x-text="kra.appraiseeRating || '-'"></span>
+                                                    <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
+                                                </div>
+                                            </template>
+                                        </td>
+                                        <!-- Appraisee Comment Column (Editable text for Employee, text for others) -->
+                                        <td class="px-4 py-3">
+                                            <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                                <input type="text" :name="'kras[' + index + '][appraiseeComment]'" x-model="kra.appraiseeComment" required
+                                                    placeholder="Enter self-comment..."
+                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white">
+                                            </template>
+                                            <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                                <div>
+                                                    <span class="text-xs text-gray-700 whitespace-pre-wrap" x-text="kra.appraiseeComment || '-'"></span>
+                                                    <input type="hidden" :name="'kras[' + index + '][appraiseeComment]'" :value="kra.appraiseeComment">
+                                                </div>
                                             </template>
                                         </td>
                                         <!-- Appraiser Rating Column -->
                                         <td class="px-4 py-3 text-center">
-                                            <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                <input type="number" min="1" max="10" step="0.1" :name="'kras[' + index + '][appraiserRating]'" x-model="kra.appraiserRating" required
-                                                    class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
-                                            </template>
-                                            <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                <span class="text-xs font-bold text-gray-700" x-text="kra.appraiserRating || '-'"></span>
-                                            </template>
-                                        </td>
-                                        <!-- Manager Comments Column -->
-                                        @if($perms['canEditManagerSection'] || $status !== 'DRAFT')
-                                            <td class="px-4 py-3">
+                                            @if($status === 'DRAFT')
+                                                <!-- Locked/Later stage -->
+                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
+                                                    <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                                </span>
+                                            @else
                                                 <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                    <input type="text" :name="'kras[' + index + '][comments]'" x-model="kra.comments"
+                                                    <select :name="'kras[' + index + '][appraiserRating]'" x-model="kra.appraiserRating" required
+                                                        class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center">
+                                                        <option value="">Select</option>
+                                                        <option value="A+">A+</option>
+                                                        <option value="A">A</option>
+                                                        <option value="B+">B+</option>
+                                                        <option value="B">B</option>
+                                                        <option value="C">C</option>
+                                                        <option value="D">D</option>
+                                                    </select>
+                                                </template>
+                                                <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
+                                                    <div>
+                                                        <span class="text-xs font-bold text-gray-750" x-text="kra.appraiserRating || '-'"></span>
+                                                        <input type="hidden" :name="'kras[' + index + '][appraiserRating]'" :value="kra.appraiserRating">
+                                                    </div>
+                                                </template>
+                                            @endif
+                                        </td>
+                                        <!-- Appraiser Comment Column -->
+                                        <td class="px-4 py-3">
+                                            @if($status === 'DRAFT')
+                                                <!-- Locked/Later stage -->
+                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
+                                                    <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                                </span>
+                                            @else
+                                                <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
+                                                    <input type="text" :name="'kras[' + index + '][comments]'" x-model="kra.comments" required
+                                                        placeholder="Enter manager comment..."
                                                         class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500">
                                                 </template>
                                                 <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                    <span class="text-xs text-gray-600 italic" x-text="kra.comments || '-'"></span>
+                                                    <div>
+                                                        <span class="text-xs text-gray-600 italic whitespace-pre-wrap" x-text="kra.comments || '-'"></span>
+                                                        <input type="hidden" :name="'kras[' + index + '][comments]'" :value="kra.comments">
+                                                    </div>
                                                 </template>
-                                            </td>
-                                        @endif
-                                        <!-- Action Delete Row Column -->
-                                        @if($perms['canEditEmployeeSection'])
-                                            <td class="px-4 py-3 text-center">
-                                                <button type="button" @click="removeKra(index)" class="text-gray-500 hover:text-black cursor-pointer">
-                                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
-                                                </button>
-                                            </td>
-                                        @endif
+                                            @endif
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>
-                            <tfoot class="border-t border-gray-200 bg-gray-50 font-bold text-black">
+                            <tfoot class="border-t border-gray-200 bg-gray-50 font-bold text-black font-mono">
                                 <tr>
-                                    <td class="px-4 py-3">Totals & Averages</td>
+                                    <td class="px-4 py-3 text-xs">Totals & Averages</td>
                                     <td class="px-4 py-3 text-center text-xs" :class="totalWeightage === 100 ? 'text-black' : 'text-red-600'" x-text="totalWeightage + '%'"></td>
                                     <td class="px-4 py-3 text-center text-xs text-blue-500" x-text="appraiseeKraAverage"></td>
+                                    <td class="px-4 py-3"></td>
                                     <td class="px-4 py-3 text-center text-xs text-gray-700" x-text="appraiserKraAverage"></td>
-                                    @if($perms['canEditManagerSection'] || $status !== 'DRAFT')
-                                        <td></td>
-                                    @endif
-                                    @if($perms['canEditEmployeeSection'])
-                                        <td></td>
-                                    @endif
+                                    <td class="px-4 py-3"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 4: Capability / Competency Assessment -->
+                <div class="bg-white border border-gray-200 p-6 space-y-5">
+                    <!-- Section Header -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">4</span>
+                            <h3 class="text-sm font-bold text-black uppercase tracking-wider">Capability / Competency Assessment</h3>
+                        </div>
+                        <p class="text-xs text-gray-500 pl-8">Appraisee and Appraiser score each capability for current role requirements.</p>
+                        <!-- Rating Legend with initials -->
+                        <div class="mt-3 pl-8 flex flex-wrap items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-red-100 text-red-600 text-[11px] font-black">P</span>
+                                <span class="text-[10px] text-gray-500 font-semibold">Poor <span class="text-gray-400">(1–3)</span></span>
+                            </span>
+                            <span class="text-gray-300">|</span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-yellow-100 text-yellow-700 text-[11px] font-black">S</span>
+                                <span class="text-[10px] text-gray-500 font-semibold">Satisfactory <span class="text-gray-400">(4–6)</span></span>
+                            </span>
+                            <span class="text-gray-300">|</span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-green-100 text-green-700 text-[11px] font-black">G</span>
+                                <span class="text-[10px] text-gray-500 font-semibold">Good <span class="text-gray-400">(7–9)</span></span>
+                            </span>
+                            <span class="text-gray-300">|</span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-blue-700 text-[11px] font-black">E</span>
+                                <span class="text-[10px] text-gray-500 font-semibold">Excellent <span class="text-gray-400">(10)</span></span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Competency Table -->
+                    <div class="overflow-x-auto border border-gray-200">
+                        <table class="w-full text-left text-sm text-black">
+                            <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
+                                <tr>
+                                    <th class="px-3 py-3 w-8 text-center">#</th>
+                                    <th class="px-4 py-3">Competency Area</th>
+                                    <th class="px-4 py-3 w-36 text-center">Appraisee</th>
+                                    <th class="px-4 py-3 w-36 text-center">Appraiser</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <template x-for="(comp, index) in competencies" :key="index">
+                                    <tr class="hover:bg-gray-50/50">
+                                        <td class="px-3 py-3 text-xs text-gray-400 font-bold text-center" x-text="index + 1"></td>
+                                        <td class="px-4 py-3">
+                                            <input type="hidden" :name="'competencyRatings[' + index + '][competencyName]'" :value="comp.competencyName">
+                                            <span class="text-xs font-semibold text-black" x-text="comp.competencyName"></span>
+                                        </td>
+
+                                        <!-- Appraisee Score: number + fixed-width initial badge -->
+                                        <td class="px-4 py-3">
+                                            @if($perms['canEditEmployeeSection'])
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <select :name="'competencyRatings[' + index + '][employeeScore]'" x-model="comp.employeeScore"
+                                                        class="w-16 py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center font-bold">
+                                                        <option value="">—</option>
+                                                        @for($s = 1; $s <= 10; $s++)
+                                                            <option value="{{ $s }}">{{ $s }}</option>
+                                                        @endfor
+                                                    </select>
+                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-black flex-shrink-0"
+                                                        :class="{
+                                                            'bg-red-100 text-red-600':       comp.employeeScore >= 1 && comp.employeeScore <= 3,
+                                                            'bg-yellow-100 text-yellow-700': comp.employeeScore >= 4 && comp.employeeScore <= 6,
+                                                            'bg-green-100 text-green-700':   comp.employeeScore >= 7 && comp.employeeScore <= 9,
+                                                            'bg-blue-100 text-blue-700':     comp.employeeScore == 10,
+                                                            'bg-gray-100 text-gray-300':     !comp.employeeScore
+                                                        }"
+                                                        x-text="comp.employeeScore >= 1 && comp.employeeScore <= 3 ? 'P' : (comp.employeeScore >= 4 && comp.employeeScore <= 6 ? 'S' : (comp.employeeScore >= 7 && comp.employeeScore <= 9 ? 'G' : (comp.employeeScore == 10 ? 'E' : '—')))"
+                                                    ></span>
+                                                </div>
+                                            @else
+                                                <input type="hidden" :name="'competencyRatings[' + index + '][employeeScore]'" :value="comp.employeeScore">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <span class="text-sm font-extrabold w-6 text-center flex-shrink-0"
+                                                        :class="{
+                                                            'text-red-500':    comp.employeeScore >= 1 && comp.employeeScore <= 3,
+                                                            'text-yellow-600': comp.employeeScore >= 4 && comp.employeeScore <= 6,
+                                                            'text-green-600':  comp.employeeScore >= 7 && comp.employeeScore <= 9,
+                                                            'text-blue-600':   comp.employeeScore == 10,
+                                                            'text-gray-300':   !comp.employeeScore
+                                                        }"
+                                                        x-text="comp.employeeScore || '—'"
+                                                    ></span>
+                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-black flex-shrink-0"
+                                                        :class="{
+                                                            'bg-red-100 text-red-600':       comp.employeeScore >= 1 && comp.employeeScore <= 3,
+                                                            'bg-yellow-100 text-yellow-700': comp.employeeScore >= 4 && comp.employeeScore <= 6,
+                                                            'bg-green-100 text-green-700':   comp.employeeScore >= 7 && comp.employeeScore <= 9,
+                                                            'bg-blue-100 text-blue-700':     comp.employeeScore == 10,
+                                                            'bg-gray-100 text-gray-300':     !comp.employeeScore
+                                                        }"
+                                                        x-text="comp.employeeScore >= 1 && comp.employeeScore <= 3 ? 'P' : (comp.employeeScore >= 4 && comp.employeeScore <= 6 ? 'S' : (comp.employeeScore >= 7 && comp.employeeScore <= 9 ? 'G' : (comp.employeeScore == 10 ? 'E' : '—')))"
+                                                    ></span>
+                                                </div>
+                                            @endif
+                                        </td>
+
+                                        <!-- Appraiser Score: number + fixed-width initial badge -->
+                                        <td class="px-4 py-3">
+                                            @if($status === 'DRAFT')
+                                                <div class="flex items-center justify-center">
+                                                    <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-1 font-bold uppercase tracking-wider font-sans">
+                                                        <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                                    </span>
+                                                </div>
+                                            @elseif($perms['canEditManagerSection'])
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <select :name="'competencyRatings[' + index + '][appraiserScore]'" x-model="comp.appraiserScore"
+                                                        class="w-16 py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center font-bold">
+                                                        <option value="">—</option>
+                                                        @for($s = 1; $s <= 10; $s++)
+                                                            <option value="{{ $s }}">{{ $s }}</option>
+                                                        @endfor
+                                                    </select>
+                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-black flex-shrink-0"
+                                                        :class="{
+                                                            'bg-red-100 text-red-600':       comp.appraiserScore >= 1 && comp.appraiserScore <= 3,
+                                                            'bg-yellow-100 text-yellow-700': comp.appraiserScore >= 4 && comp.appraiserScore <= 6,
+                                                            'bg-green-100 text-green-700':   comp.appraiserScore >= 7 && comp.appraiserScore <= 9,
+                                                            'bg-blue-100 text-blue-700':     comp.appraiserScore == 10,
+                                                            'bg-gray-100 text-gray-300':     !comp.appraiserScore
+                                                        }"
+                                                        x-text="comp.appraiserScore >= 1 && comp.appraiserScore <= 3 ? 'P' : (comp.appraiserScore >= 4 && comp.appraiserScore <= 6 ? 'S' : (comp.appraiserScore >= 7 && comp.appraiserScore <= 9 ? 'G' : (comp.appraiserScore == 10 ? 'E' : '—')))"
+                                                    ></span>
+                                                </div>
+                                            @else
+                                                <input type="hidden" :name="'competencyRatings[' + index + '][appraiserScore]'" :value="comp.appraiserScore">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <span class="text-sm font-extrabold w-6 text-center flex-shrink-0"
+                                                        :class="{
+                                                            'text-red-500':    comp.appraiserScore >= 1 && comp.appraiserScore <= 3,
+                                                            'text-yellow-600': comp.appraiserScore >= 4 && comp.appraiserScore <= 6,
+                                                            'text-green-600':  comp.appraiserScore >= 7 && comp.appraiserScore <= 9,
+                                                            'text-blue-600':   comp.appraiserScore == 10,
+                                                            'text-gray-300':   !comp.appraiserScore
+                                                        }"
+                                                        x-text="comp.appraiserScore || '—'"
+                                                    ></span>
+                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-black flex-shrink-0"
+                                                        :class="{
+                                                            'bg-red-100 text-red-600':       comp.appraiserScore >= 1 && comp.appraiserScore <= 3,
+                                                            'bg-yellow-100 text-yellow-700': comp.appraiserScore >= 4 && comp.appraiserScore <= 6,
+                                                            'bg-green-100 text-green-700':   comp.appraiserScore >= 7 && comp.appraiserScore <= 9,
+                                                            'bg-blue-100 text-blue-700':     comp.appraiserScore == 10,
+                                                            'bg-gray-100 text-gray-300':     !comp.appraiserScore
+                                                        }"
+                                                        x-text="comp.appraiserScore >= 1 && comp.appraiserScore <= 3 ? 'P' : (comp.appraiserScore >= 4 && comp.appraiserScore <= 6 ? 'S' : (comp.appraiserScore >= 7 && comp.appraiserScore <= 9 ? 'G' : (comp.appraiserScore == 10 ? 'E' : '—')))"
+                                                    ></span>
+                                                </div>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <!-- Footer averages -->
+                            <tfoot class="border-t-2 border-gray-200 bg-gray-50">
+                                <tr>
+                                    <td colspan="2" class="px-4 py-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Average Score</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="text-base font-extrabold text-blue-600" x-text="competencyEmployeeAvg"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="text-base font-extrabold text-green-700" x-text="competencyAppraiserAvg"></span>
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -420,236 +592,284 @@
 
             </div>
 
-            <!-- Right 1 Col: Skills Ratings, Manager Review, CEO Review -->
-            <div class="space-y-8">
-                <!-- Section 3: Skill Calibrations -->
-                <div class="bg-white border border-gray-200 p-6 space-y-4">
-                    <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="sliders" class="h-4 w-4 text-blue-500"></i>
-                        Skill Ratings
-                    </h3>
-                    
-                    <div class="space-y-4">
-                        <template x-for="(skill, index) in skills" :key="index">
-                            <div class="space-y-2 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-black" x-text="skill.skillName"></span>
-                                    <input type="hidden" :name="'skillRatings[' + index + '][id]'" :value="skill.id">
-                                    <input type="hidden" :name="'skillRatings[' + index + '][skillName]'" :value="skill.skillName">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[9px] text-blue-500 font-bold" x-text="'Self: ' + (skill.employeeRating || '-')"></span>
-                                        <span class="text-[9px] text-gray-600 font-bold" x-text="'Mgr: ' + (skill.managerRating || '-')"></span>
-                                    </div>
-                                </div>
+            <!-- Right 1 Col: Appraiser, Reviewer, Special Appeal -->
+            <div class="space-y-6">
 
-                                <div class="grid grid-cols-2 gap-3">
-                                    <!-- Employee Input -->
-                                    <div>
-                                        <label class="text-[9px] uppercase font-bold text-gray-400">Self (1-10)</label>
-                                        <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <input type="number" min="1" max="10" step="1" :name="'skillRatings[' + index + '][employeeRating]'" x-model.number="skill.employeeRating" required
-                                                class="block w-full py-1 px-2 text-xs input-flat focus:border-blue-500 text-center">
-                                        </template>
-                                        <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <span class="block py-1 text-xs text-blue-500 font-bold" x-text="skill.employeeRating || 'N/A'"></span>
-                                        </template>
-                                    </div>
-
-                                    <!-- Manager Input -->
-                                    <div>
-                                        <label class="text-[9px] uppercase font-bold text-gray-400">Mgr (1-10)</label>
-                                        <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                            <input type="number" min="1" max="10" step="1" :name="'skillRatings[' + index + '][managerRating]'" x-model.number="skill.managerRating" required
-                                                class="block w-full py-1 px-2 text-xs input-flat focus:border-blue-500 text-center">
-                                        </template>
-                                        <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                            <span class="block py-1 text-xs text-gray-700 font-bold" x-text="skill.managerRating || 'N/A'"></span>
-                                        </template>
-                                    </div>
-                                </div>
+                <!-- Section 5: Appraiser Section (To be filled by Appraiser) -->
+                @php
+                    $showAppraiserSection = $perms['canEditManagerSection']
+                        || !empty($appraisal['appraiserSection']['recommendation'])
+                        || $appraisal['appraiserSection']['overallRating'] !== null;
+                @endphp
+                @if($showAppraiserSection || $role !== 'EMPLOYEE')
+                    <div class="bg-white border-l-4 border-blue-500 border-y border-r border-gray-200 p-5 space-y-4">
+                        <!-- Header -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">5</span>
+                                <h3 class="text-sm font-bold text-black uppercase tracking-wider">Appraiser Section</h3>
                             </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Section 4: Manager Assessment comments -->
-                @if($perms['canEditManagerSection'] || $appraisal['managerReview']['overallRating'] !== null || !empty($appraisal['managerReview']['comments']))
-                    <div class="bg-white border-l-4 border-blue-500 border-y border-r border-gray-200 p-6 space-y-4">
-                        <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="message-square" class="h-4 w-4 text-blue-500"></i>
-                            Manager Review
-                        </h3>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label for="manager_comments" class="block text-xs font-bold text-black">Assessment Comments</label>
+                            <p class="text-[11px] text-gray-500 pl-8">
                                 @if($perms['canEditManagerSection'])
-                                    <textarea id="manager_comments" name="managerReview[comments]" rows="3" required
-                                        class="mt-1 block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300"
-                                        placeholder="Write feedback comments on employee achievements and scope...">{{ $appraisal['managerReview']['comments'] }}</textarea>
+                                    Fill your overall assessment and recommendation below.
                                 @else
-                                    <p class="mt-1 bg-gray-50 border border-gray-200 p-4 text-xs text-black leading-relaxed">
-                                        {{ $appraisal['managerReview']['comments'] ?: 'No assessment comments provided.' }}
-                                    </p>
+                                    To be filled by Appraiser.
                                 @endif
-                            </div>
-
-                            <div>
-                                <label for="manager_rating" class="block text-xs font-bold text-black">Recommended Overall Rating (1-10)</label>
-                                @if($perms['canEditManagerSection'])
-                                    <input id="manager_rating" name="managerReview[overallRating]" type="number" min="1" max="10" step="0.1" required
-                                        value="{{ $appraisal['managerReview']['overallRating'] }}"
-                                        class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
-                                @else
-                                    <p class="mt-1 text-sm font-extrabold text-blue-500">
-                                        {{ $appraisal['managerReview']['overallRating'] !== null ? number_format($appraisal['managerReview']['overallRating'], 2) : 'N/A' }}
-                                    </p>
-                                @endif
-                            </div>
+                            </p>
                         </div>
+
+                        @if(!$perms['canEditManagerSection'] && $appraisal['appraiserSection']['overallRating'] === null && empty($appraisal['appraiserSection']['recommendation']))
+                            <div class="flex items-center gap-2 py-3 text-xs text-gray-400 italic">
+                                <i data-lucide="clock" class="h-4 w-4"></i>
+                                Awaiting Appraiser review.
+                            </div>
+                        @else
+                            <div class="space-y-4">
+                                <!-- Overall Rating -->
+                                <div>
+                                    <label for="appraiser_overall_rating" class="block text-xs font-bold text-black">Overall Rating (1–10)</label>
+                                    @if($perms['canEditManagerSection'])
+                                        <input id="appraiser_overall_rating" name="appraiserSection[overallRating]" type="number" min="1" max="10" step="0.1" required
+                                            value="{{ $appraisal['appraiserSection']['overallRating'] }}"
+                                            class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
+                                    @else
+                                        <p class="mt-1 text-xl font-extrabold text-blue-500">
+                                            {{ $appraisal['appraiserSection']['overallRating'] !== null ? number_format($appraisal['appraiserSection']['overallRating'], 2) : 'N/A' }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <!-- Final Recommendation -->
+                                <div>
+                                    <label for="appraiser_recommendation" class="block text-xs font-bold text-black">Final Recommendation</label>
+                                    @if($perms['canEditManagerSection'])
+                                        <textarea id="appraiser_recommendation" name="appraiserSection[recommendation]" rows="4" required
+                                            class="mt-1 block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300 resize-none"
+                                            placeholder="Write your overall recommendation and performance assessment...">{{ $appraisal['appraiserSection']['recommendation'] }}</textarea>
+                                    @else
+                                        <div class="mt-1 bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700 leading-relaxed">
+                                            {{ $appraisal['appraiserSection']['recommendation'] ?: 'Not yet filled.' }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- New KRA/KPI Notes -->
+                                <div>
+                                    <label for="appraiser_new_kra" class="block text-xs font-bold text-black">New KRA/KPI Notes <span class="font-normal text-gray-400">(if any)</span></label>
+                                    @if($perms['canEditManagerSection'])
+                                        <textarea id="appraiser_new_kra" name="appraiserSection[newKraNotes]" rows="3"
+                                            class="mt-1 block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300 resize-none"
+                                            placeholder="Mention any new KRA/KPI targets for the next cycle...">{{ $appraisal['appraiserSection']['newKraNotes'] }}</textarea>
+                                    @else
+                                        <div class="mt-1 bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600 leading-relaxed italic">
+                                            {{ $appraisal['appraiserSection']['newKraNotes'] ?: 'None specified.' }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Appraiser Signature -->
+                                @if($appraisal['appraiserSignedAt'])
+                                    <div class="border-t border-gray-100 pt-3">
+                                        <div class="flex items-center gap-2">
+                                            <i data-lucide="check-circle-2" class="h-4 w-4 text-green-600 shrink-0"></i>
+                                            <div>
+                                                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Appraiser Signed</p>
+                                                <p class="text-xs font-semibold text-green-700">
+                                                    {{ \Carbon\Carbon::parse($appraisal['appraiserSignedAt'])->format('M d, Y — H:i') }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @endif
 
-                <!-- Section 5: BU Head Calibration Decision -->
-                @if($perms['canEditBUHeadSection'] || $appraisal['buHeadReview']['finalRating'] !== null || $appraisal['buHeadReview']['hikePercentage'] !== null)
-                    <div class="bg-white border-l-4 border-black border-y border-r border-gray-200 p-6 space-y-4">
-                        <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="shield-check" class="h-4 w-4 text-black"></i>
-                            BU Head Calibrated Decision
-                        </h3>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label for="bu_head_comments" class="block text-xs font-bold text-black">Calibration Comments / Justification</label>
-                                @if($perms['canEditBUHeadSection'])
-                                    <textarea id="bu_head_comments" name="buHeadReview[comments]" rows="3"
-                                        class="mt-1 block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300"
-                                        placeholder="Write decision and calibration justification notes...">{{ $appraisal['buHeadReview']['comments'] }}</textarea>
-                                @else
-                                    <p class="mt-1 bg-gray-50 border border-gray-200 p-4 text-xs text-black leading-relaxed">
-                                        {{ $appraisal['buHeadReview']['comments'] ?: 'No calibration feedback provided.' }}
-                                    </p>
-                                @endif
+                <!-- Section 6: Reviewer Section (To be filled by BU Head / Reviewer) -->
+                @php
+                    $showReviewerSection = $perms['canEditBUHeadSection']
+                        || !empty($appraisal['reviewerSection']['comments'])
+                        || $appraisal['reviewerSection']['rating'] !== null
+                        || $appraisal['buHeadReview']['finalRating'] !== null;
+                @endphp
+                @if($showReviewerSection || $role !== 'EMPLOYEE')
+                    <div class="bg-white border-l-4 border-gray-800 border-y border-r border-gray-200 p-5 space-y-4">
+                        <!-- Header -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-800 text-white text-[10px] font-bold">6</span>
+                                <h3 class="text-sm font-bold text-black uppercase tracking-wider">Reviewer Section</h3>
                             </div>
+                            <p class="text-[11px] text-gray-500 pl-8">
+                                @if($perms['canEditBUHeadSection'])
+                                    Complete the final review and rating below.
+                                @else
+                                    To be filled by Reviewer / BU Head.
+                                @endif
+                            </p>
+                        </div>
 
-                            <div class="grid grid-cols-1 {{ $appraisal['type'] === 'SALARY' ? 'md:grid-cols-3' : 'md:grid-cols-2' }} gap-4">
+                        @if(!$perms['canEditBUHeadSection'] && $appraisal['reviewerSection']['rating'] === null && empty($appraisal['reviewerSection']['comments']))
+                            <div class="flex items-center gap-2 py-3 text-xs text-gray-400 italic">
+                                <i data-lucide="clock" class="h-4 w-4"></i>
+                                Awaiting Reviewer.
+                            </div>
+                        @else
+                            <div class="space-y-4">
+                                <!-- Reviewer Comments -->
                                 <div>
-                                    <label for="bu_head_rating" class="block text-xs font-bold text-black">Final Rating</label>
+                                    <label for="reviewer_comments" class="block text-xs font-bold text-black">Reviewer Comments</label>
                                     @if($perms['canEditBUHeadSection'])
-                                        <input id="bu_head_rating" name="buHeadReview[finalRating]" type="number" min="1" max="10" step="0.1" required
-                                            value="{{ $appraisal['buHeadReview']['finalRating'] }}"
-                                            class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
+                                        <textarea id="reviewer_comments" name="reviewerSection[comments]" rows="4"
+                                            class="mt-1 block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300 resize-none"
+                                            placeholder="Write decision and calibration justification notes...">{{ $appraisal['reviewerSection']['comments'] }}</textarea>
                                     @else
-                                        <p class="mt-1 text-sm font-extrabold text-black">
-                                            {{ $appraisal['buHeadReview']['finalRating'] !== null ? number_format($appraisal['buHeadReview']['finalRating'], 2) : 'N/A' }}
-                                        </p>
+                                        <div class="mt-1 bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700 leading-relaxed">
+                                            {{ $appraisal['reviewerSection']['comments'] ?: 'Not yet filled.' }}
+                                        </div>
                                     @endif
+                                </div>
+
+                                <!-- Reviewer Rating and Final Rating -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="reviewer_rating" class="block text-xs font-bold text-black">Reviewer Rating (1–10)</label>
+                                        @if($perms['canEditBUHeadSection'])
+                                            <input id="reviewer_rating" name="reviewerSection[rating]" type="number" min="1" max="10" step="0.1"
+                                                value="{{ $appraisal['reviewerSection']['rating'] }}"
+                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
+                                        @else
+                                            <p class="mt-1 text-xl font-extrabold text-gray-900">
+                                                {{ $appraisal['reviewerSection']['rating'] !== null ? number_format($appraisal['reviewerSection']['rating'], 1) : 'N/A' }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <label for="bu_head_rating" class="block text-xs font-bold text-black">Final Rating</label>
+                                        @if($perms['canEditBUHeadSection'])
+                                            <input id="bu_head_rating" name="buHeadReview[finalRating]" type="number" min="1" max="10" step="0.1" required
+                                                value="{{ $appraisal['buHeadReview']['finalRating'] }}"
+                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
+                                        @else
+                                            <p class="mt-1 text-xl font-extrabold text-blue-600">
+                                                {{ $appraisal['buHeadReview']['finalRating'] !== null ? number_format($appraisal['buHeadReview']['finalRating'], 2) : 'N/A' }}
+                                            </p>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 @if($appraisal['type'] === 'SALARY')
                                     <div>
                                         <label for="bu_head_hike" class="block text-xs font-bold text-black">Hike Percentage</label>
                                         @if($perms['canEditBUHeadSection'])
-                                            <input id="bu_head_hike" name="buHeadReview[hikePercentage]" type="number" min="0" max="100" step="0.1" required
+                                            <input id="bu_head_hike" name="buHeadReview[hikePercentage]" type="number" min="0" max="100" step="0.1"
                                                 value="{{ $appraisal['buHeadReview']['hikePercentage'] }}"
                                                 class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold text-blue-500">
                                         @else
-                                            <p class="mt-1 text-sm font-extrabold text-blue-500">
+                                            <p class="mt-1 text-xl font-extrabold text-blue-500">
                                                 {{ $appraisal['buHeadReview']['hikePercentage'] !== null ? '+' . number_format($appraisal['buHeadReview']['hikePercentage'], 1) . '%' : 'N/A' }}
                                             </p>
                                         @endif
                                     </div>
                                 @endif
 
-                                <div>
-                                    <label for="promotion_recommended" class="block text-xs font-bold text-black">Promotion Recommended</label>
-                                    @if($perms['canEditBUHeadSection'])
-                                        <select id="promotion_recommended" name="promotionRecommended"
-                                            class="mt-1 block w-full border border-gray-300 py-2 px-3 text-black focus:outline-none focus:border-blue-500 text-sm">
-                                            <option value="0" {{ !$appraisal['promotionRecommended'] ? 'selected' : '' }}>No</option>
-                                            <option value="1" {{ $appraisal['promotionRecommended'] ? 'selected' : '' }}>Yes</option>
-                                        </select>
-                                    @else
-                                        <span class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $appraisal['promotionRecommended'] ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                            {{ $appraisal['promotionRecommended'] ? 'Yes' : 'No' }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
+                                <!-- Promotion + Grade -->
+                                @if($perms['canEditBUHeadSection'] || $appraisal['promotionRecommended'] !== null)
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="promotion_recommended" class="block text-xs font-bold text-black">Promotion</label>
+                                            @if($perms['canEditBUHeadSection'])
+                                                <select id="promotion_recommended" name="promotionRecommended"
+                                                    class="mt-1 block w-full border border-gray-300 py-2 px-3 text-black focus:outline-none focus:border-blue-500 text-sm">
+                                                    <option value="0" {{ !$appraisal['promotionRecommended'] ? 'selected' : '' }}>No</option>
+                                                    <option value="1" {{ $appraisal['promotionRecommended'] ? 'selected' : '' }}>Yes</option>
+                                                </select>
+                                            @else
+                                                <span class="mt-1 inline-flex items-center px-2.5 py-0.5 text-xs font-bold {{ $appraisal['promotionRecommended'] ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
+                                                    {{ $appraisal['promotionRecommended'] ? 'Yes' : 'No' }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <label for="grade" class="block text-xs font-bold text-black">Grade</label>
+                                            @if($perms['canEditBUHeadSection'])
+                                                <input id="grade" name="grade" type="text"
+                                                    value="{{ $appraisal['grade'] }}"
+                                                    class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center">
+                                            @else
+                                                <p class="mt-1 text-sm font-extrabold text-black font-mono">{{ $appraisal['grade'] ?: 'N/A' }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
 
-                            @if($appraisal['type'] === 'SALARY')
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div>
-                                        <label for="adjustments" class="block text-xs font-bold text-black">Adjustments (INR)</label>
-                                        @if($perms['canEditBUHeadSection'])
+                                @if($appraisal['type'] === 'SALARY' && $perms['canEditBUHeadSection'])
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div>
+                                            <label for="adjustments" class="block text-xs font-bold text-black">Adjustments (INR)</label>
                                             <input id="adjustments" name="adjustments" type="number" step="1"
                                                 value="{{ $appraisal['adjustments'] }}"
                                                 class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center">
-                                        @else
-                                            <p class="mt-1 text-sm font-semibold text-black">
-                                                {{ $appraisal['adjustments'] !== null ? 'INR ' . number_format($appraisal['adjustments']) : 'N/A' }}
-                                            </p>
-                                        @endif
-                                    </div>
-
-                                    <div>
-                                        <label for="increment_amount" class="block text-xs font-bold text-black">Increment Amount (INR)</label>
-                                        @if($perms['canEditBUHeadSection'])
+                                        </div>
+                                        <div>
+                                            <label for="increment_amount" class="block text-xs font-bold text-black">Increment (INR)</label>
                                             <input id="increment_amount" name="incrementAmount" type="number" step="1"
                                                 value="{{ $appraisal['incrementAmount'] }}"
                                                 class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center">
-                                        @else
-                                            <p class="mt-1 text-sm font-semibold text-black">
-                                                {{ $appraisal['incrementAmount'] !== null ? 'INR ' . number_format($appraisal['incrementAmount']) : 'N/A' }}
-                                            </p>
-                                        @endif
-                                    </div>
-
-                                    <div>
-                                        <label for="new_ctc" class="block text-xs font-bold text-black">New CTC (INR)</label>
-                                        @if($perms['canEditBUHeadSection'])
+                                        </div>
+                                        <div>
+                                            <label for="new_ctc" class="block text-xs font-bold text-black">New CTC (INR)</label>
                                             <input id="new_ctc" name="newCtc" type="number" step="1"
                                                 value="{{ $appraisal['newCtc'] }}"
                                                 class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center">
-                                        @else
-                                            <p class="mt-1 text-sm font-semibold text-black">
-                                                {{ $appraisal['newCtc'] !== null ? 'INR ' . number_format($appraisal['newCtc']) : 'N/A' }}
-                                            </p>
-                                        @endif
+                                        </div>
                                     </div>
+                                @elseif($appraisal['type'] === 'SALARY')
+                                    <div class="grid grid-cols-3 gap-3 text-xs">
+                                        <div><span class="text-gray-400 font-bold">Adjustments</span><br><span class="font-semibold">{{ $appraisal['adjustments'] !== null ? 'INR ' . number_format($appraisal['adjustments']) : 'N/A' }}</span></div>
+                                        <div><span class="text-gray-400 font-bold">Increment</span><br><span class="font-semibold">{{ $appraisal['incrementAmount'] !== null ? 'INR ' . number_format($appraisal['incrementAmount']) : 'N/A' }}</span></div>
+                                        <div><span class="text-gray-400 font-bold">New CTC</span><br><span class="font-semibold">{{ $appraisal['newCtc'] !== null ? 'INR ' . number_format($appraisal['newCtc']) : 'N/A' }}</span></div>
+                                    </div>
+                                @endif
 
-                                    <div>
-                                        <label for="grade" class="block text-xs font-bold text-black">Grade</label>
-                                        @if($perms['canEditBUHeadSection'])
-                                            <input id="grade" name="grade" type="text"
-                                                value="{{ $appraisal['grade'] }}"
-                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center">
+                                <!-- Signatures Row -->
+                                <div class="border-t border-gray-100 pt-3 space-y-3">
+                                    <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Signatures</p>
+                                    <!-- Appraiser Signature -->
+                                    <div class="flex items-center gap-2">
+                                        @if($appraisal['appraiserSignedAt'])
+                                            <i data-lucide="check-circle-2" class="h-4 w-4 text-green-600 shrink-0"></i>
+                                            <div>
+                                                <p class="text-[10px] text-gray-500">Appraiser</p>
+                                                <p class="text-xs font-bold text-green-700">{{ \Carbon\Carbon::parse($appraisal['appraiserSignedAt'])->format('M d, Y H:i') }}</p>
+                                            </div>
                                         @else
-                                            <p class="mt-1 text-sm font-semibold text-black">
-                                                {{ $appraisal['grade'] ?: 'N/A' }}
-                                            </p>
+                                            <i data-lucide="circle-dashed" class="h-4 w-4 text-gray-300 shrink-0"></i>
+                                            <p class="text-xs text-gray-400">Appraiser — Not signed</p>
+                                        @endif
+                                    </div>
+                                    <!-- Reviewer Signature -->
+                                    <div class="flex items-center gap-2">
+                                        @if($appraisal['reviewerSignedAt'])
+                                            <i data-lucide="check-circle-2" class="h-4 w-4 text-green-600 shrink-0"></i>
+                                            <div>
+                                                <p class="text-[10px] text-gray-500">Reviewer</p>
+                                                <p class="text-xs font-bold text-green-700">{{ \Carbon\Carbon::parse($appraisal['reviewerSignedAt'])->format('M d, Y H:i') }}</p>
+                                            </div>
+                                        @else
+                                            <i data-lucide="circle-dashed" class="h-4 w-4 text-gray-300 shrink-0"></i>
+                                            <p class="text-xs text-gray-400">Reviewer — Not signed</p>
                                         @endif
                                     </div>
                                 </div>
-                            @else
-                                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-                                    <div>
-                                        <label for="grade" class="block text-xs font-bold text-black">Grade</label>
-                                        @if($perms['canEditBUHeadSection'])
-                                            <input id="grade" name="grade" type="text"
-                                                value="{{ $appraisal['grade'] }}"
-                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center">
-                                        @else
-                                            <p class="mt-1 text-sm font-semibold text-black">
-                                                {{ $appraisal['grade'] ?: 'N/A' }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </div>
                 @endif
+
+
+                <!-- Section 7: Special Appeal -->
 
                 <!-- Section 6: Special Appeal -->
                 @if($status === 'COMPLETED')
@@ -742,129 +962,7 @@
                 @endif
             </div>
         </div>
-        <!-- Section 7: Next Cycle KRA Settings -->
-        @if($status === 'COMPLETED')
-            <div class="bg-white border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="compass" class="h-4 w-4 text-blue-500"></i>
-                        Section 7: Next Cycle KRA Goals (Next 6 Months)
-                    </h3>
-                    @php
-                        $canEditNextCycle = ($role === 'MANAGER' && $data['viewer']['employeeId'] === $appraisal['managerId'] && !empty($appraisal['buHeadSubmittedAt']) && \Carbon\Carbon::parse($appraisal['buHeadSubmittedAt'])->diffInDays(now()) <= 30);
-                    @endphp
-                    @if($canEditNextCycle)
-                        <span class="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 font-bold uppercase">
-                            1-Month Edit Window Active
-                        </span>
-                    @else
-                        <span class="text-[10px] bg-gray-100 text-gray-500 border border-gray-250 px-2 py-0.5 font-bold uppercase">
-                            Read Only
-                        </span>
-                    @endif
-                </div>
 
-                <div class="p-6 space-y-6">
-                    <p class="text-xs text-gray-500">
-                        Discuss and establish the performance Key Result Areas (KRAs) for the upcoming six-month cycle. 
-                        @if($canEditNextCycle)
-                            As the reporting manager, you can define objectives and weightages. The total weightage must sum up to exactly 100%.
-                        @endif
-                    </p>
-
-                    <div class="overflow-x-auto border border-gray-200">
-                        <table class="w-full text-left text-sm text-black">
-                            <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200 font-mono">
-                                <tr>
-                                    <th class="px-6 py-3 w-12">#</th>
-                                    <th class="px-6 py-3">KRA Objective / Goal</th>
-                                    <th class="px-6 py-3 w-32">Weightage (%)</th>
-                                    @if($canEditNextCycle)
-                                        <th class="px-6 py-3 w-20 text-center">Action</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <!-- Read-Only / Empty State when not editing next cycle and no KRAs set -->
-                                <template x-if="nextCycleKras.length === 0">
-                                    <tr>
-                                        <td :colspan="nextCycleKras.length === 0 ? 4 : 3" class="px-6 py-8 text-center text-gray-500 text-xs italic">
-                                            No next cycle KRAs have been defined yet.
-                                        </td>
-                                    </tr>
-                                </template>
-
-                                <!-- Loop through Next Cycle KRAs -->
-                                <template x-for="(kra, index) in nextCycleKras" :key="index">
-                                    <tr class="hover:bg-gray-50/50">
-                                        <td class="px-6 py-4 font-mono text-xs text-gray-500" x-text="index + 1"></td>
-                                        <td class="px-6 py-4">
-                                            @if($canEditNextCycle)
-                                                <input type="text" :name="'nextCycleKras[' + index + '][objective]'" x-model="kra.objective" required
-                                                    placeholder="Define future KRA objective..."
-                                                    class="block w-full border border-gray-300 py-1.5 px-3 text-sm text-black focus:outline-none focus:border-blue-500 placeholder:text-gray-300">
-                                            @else
-                                                <span class="text-sm font-semibold text-black" x-text="kra.objective"></span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            @if($canEditNextCycle)
-                                                <div class="relative">
-                                                    <input type="number" :name="'nextCycleKras[' + index + '][weightage]'" x-model.number="kra.weightage" min="1" max="100" required
-                                                        class="block w-full border border-gray-300 py-1.5 pl-3 pr-6 text-sm text-black focus:outline-none focus:border-blue-500 font-mono">
-                                                    <span class="absolute inset-y-0 right-2 flex items-center text-xs text-gray-400 font-mono">%</span>
-                                                </div>
-                                            @else
-                                                <span class="text-sm font-mono text-black font-semibold" x-text="kra.weightage + '%'"></span>
-                                            @endif
-                                        </td>
-                                        @if($canEditNextCycle)
-                                            <td class="px-6 py-4 text-center">
-                                                <button type="button" @click="removeNextCycleKra(index)" class="text-red-500 hover:text-red-700 cursor-pointer">
-                                                    <i data-lucide="trash-2" class="h-4 w-4 mx-auto"></i>
-                                                </button>
-                                            </td>
-                                        @endif
-                                    </tr>
-                                </template>
-                            </tbody>
-                            <tfoot class="bg-gray-50/50 font-bold border-t border-gray-200 font-mono">
-                                <tr>
-                                    <td class="px-6 py-3"></td>
-                                    <td class="px-6 py-3 text-right text-xs uppercase tracking-wider text-gray-500">Total Weightage:</td>
-                                    <td class="px-6 py-3 text-sm" :class="totalNextCycleWeightage === 100 ? 'text-green-600' : 'text-red-600'" x-text="totalNextCycleWeightage + '%'"></td>
-                                    @if($canEditNextCycle)
-                                        <td></td>
-                                    @endif
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-
-                    @if($canEditNextCycle)
-                        <div class="flex justify-between items-center pt-2">
-                            <button type="button" @click="addNextCycleKra()"
-                                class="border border-gray-300 bg-white hover:bg-gray-50 px-4 py-2 text-xs font-bold text-black transition-colors cursor-pointer flex items-center gap-1.5">
-                                <i data-lucide="plus" class="h-3.5 w-3.5"></i> Add Goal
-                            </button>
-
-                            <button type="submit" formaction="{{ route('appraisals.save', $appraisal['id']) }}"
-                                :disabled="totalNextCycleWeightage !== 100"
-                                :class="totalNextCycleWeightage !== 100 ? 'opacity-50 cursor-not-allowed' : ''"
-                                class="bg-blue-500 hover:bg-blue-600 px-5 py-2 text-xs font-bold text-white transition-colors cursor-pointer flex items-center gap-2">
-                                <i data-lucide="save" class="h-3.5 w-3.5"></i> Save Next Cycle KRAs
-                            </button>
-                        </div>
-
-                        <!-- Weightage warning block -->
-                        <div class="border border-red-200 bg-red-50 p-4 text-red-800 text-xs flex items-center gap-3" x-show="totalNextCycleWeightage !== 100">
-                            <i data-lucide="alert-triangle" class="h-4.5 w-4.5 shrink-0 text-red-600"></i>
-                            <p><strong>KRA Goal Alignment Required:</strong> Total weightage of the next-cycle goals must sum up to exactly <strong>100%</strong> to enable saving. Current total: <span class="font-bold" x-text="totalNextCycleWeightage + '%'"></span></p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        @endif
 
         <!-- Bottom Save and Submit buttons when editing -->
         @if($perms['canSave'] && $status !== 'COMPLETED')
@@ -888,4 +986,91 @@
         @endif
     </form>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function appraisalForm() {
+        return {
+                kras: @json($appraisal['kras'] ?? []),
+            competencies: @json($appraisal['competencyRatings'] ?? []),
+
+            addKra() {
+                this.kras.push({
+                    id: '',
+                    objective: '',
+                    weightage: 0,
+                    appraiseeRating: '',
+                    appraiseeComment: '',
+                    appraiserRating: '',
+                    comments: '',
+                    displayOrder: this.kras.length
+                });
+            },
+            removeKra(index) {
+                this.kras.splice(index, 1);
+            },
+            gradeToNumeric(grade) {
+                if (grade === null || grade === undefined || grade === '') return 0;
+                var g = String(grade).toUpperCase().trim();
+                switch (g) {
+                    case 'A+': return 10.0;
+                    case 'A': return 8.5;
+                    case 'B+': return 7.5;
+                    case 'B': return 6.5;
+                    case 'C': return 5.0;
+                    case 'D': return 3.0;
+                    default:
+                        var n = parseFloat(grade);
+                        return isNaN(n) ? 0 : n;
+                }
+            },
+            get totalWeightage() {
+                return this.kras.reduce(function(sum, item) {
+                    return sum + parseFloat(item.weightage || 0);
+                }, 0);
+            },
+            get appraiseeKraAverage() {
+                var self = this;
+                var ratings = this.kras.map(function(i) {
+                    return self.gradeToNumeric(i.appraiseeRating);
+                }).filter(function(r) {
+                    return r > 0;
+                });
+                if(!ratings.length) return 'N/A';
+                var total = ratings.reduce(function(sum, r) {
+                    return sum + r;
+                }, 0);
+                return (total / ratings.length).toFixed(2);
+            },
+            get appraiserKraAverage() {
+                var self = this;
+                var ratings = this.kras.map(function(i) {
+                    return self.gradeToNumeric(i.appraiserRating);
+                }).filter(function(r) {
+                    return r > 0;
+                });
+                if(!ratings.length) return 'N/A';
+                var total = ratings.reduce(function(sum, r) {
+                    return sum + r;
+                }, 0);
+                return (total / ratings.length).toFixed(2);
+            },
+            get competencyEmployeeAvg() {
+                var scores = this.competencies
+                    .map(function(c) { return parseInt(c.employeeScore); })
+                    .filter(function(s) { return !isNaN(s) && s > 0; });
+                if (!scores.length) return 'N/A';
+                return (scores.reduce(function(a, b) { return a + b; }, 0) / scores.length).toFixed(1);
+            },
+            get competencyAppraiserAvg() {
+                var scores = this.competencies
+                    .map(function(c) { return parseInt(c.appraiserScore); })
+                    .filter(function(s) { return !isNaN(s) && s > 0; });
+                if (!scores.length) return 'N/A';
+                return (scores.reduce(function(a, b) { return a + b; }, 0) / scores.length).toFixed(1);
+            }
+        };
+    }
+</script>
 @endsection

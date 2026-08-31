@@ -5,28 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Kra extends Model
+class CompetencyRating extends Model
 {
-    protected $table = 'kras';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'id',
         'appraisalId',
-        'objective',
-        'weightage',
-        'appraiseeRating',
-        'appraiserRating',
-        'appraiseeComment',
-        'comments',
+        'competencyName',
+        'employeeScore',
+        'appraiserScore',
         'displayOrder',
     ];
 
     protected $casts = [
-        'weightage' => 'double',
-        'appraiseeRating' => 'double',
-        'appraiserRating' => 'double',
+        'employeeScore'  => 'integer',
+        'appraiserScore' => 'integer',
+        'displayOrder'   => 'integer',
     ];
 
     public function appraisal(): BelongsTo

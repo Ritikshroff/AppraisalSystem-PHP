@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Appraisal;
 use App\Models\AppraisalCycle;
+use App\Models\CompetencyRating;
 use App\Models\Employee;
 use App\Models\Kra;
 use App\Models\SkillRating;
@@ -55,11 +56,31 @@ class DatabaseSeeder extends Seeder
                 'weightage' => 100 / $count,
                 'appraiseeRating' => 7.2 + $index * 0.5,
                 'appraiserRating' => $managerComplete ? 7.4 + $index * 0.4 : null,
+                'appraiseeComment' => "Self-appraisal achievements and comments for {$objective}.",
                 'comments' => $managerComplete ? "Manager comments for {$objective}." : null,
                 'displayOrder' => $index,
             ];
         }
         return $kras;
+    }
+
+    private function buildCompetencies(bool $appraiserComplete = false): array
+    {
+        $competencies = \App\Services\AppraisalHelperService::DEFAULT_COMPETENCIES;
+        $employeeScores = [8, 7, 9, 6, 8, 5, 8, 7, 9, 8, 7];
+        $appraiserScores = [8, 8, 8, 7, 8, 6, 9, 7, 8, 8, 8];
+
+        $result = [];
+        foreach ($competencies as $index => $name) {
+            $result[] = [
+                'id'             => Str::uuid()->toString(),
+                'competencyName' => $name,
+                'employeeScore'  => $employeeScores[$index] ?? 7,
+                'appraiserScore' => $appraiserComplete ? ($appraiserScores[$index] ?? 7) : null,
+                'displayOrder'   => $index,
+            ];
+        }
+        return $result;
     }
 
     private function buildSkills(bool $managerComplete = false): array
@@ -141,6 +162,12 @@ class DatabaseSeeder extends Seeder
             SkillRating::create($skill);
         }
 
+        // Seed competency ratings (Section 4)
+        foreach ($this->buildCompetencies($managerComplete) as $comp) {
+            $comp['appraisalId'] = $appraisal->id;
+            CompetencyRating::create($comp);
+        }
+
         return $appraisal;
     }
 
@@ -150,14 +177,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Clear tables
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        CompetencyRating::truncate();
         SkillRating::truncate();
         Kra::truncate();
         Appraisal::truncate();
         User::truncate();
         AppraisalCycle::truncate();
-        
-        // Remove foreign key constraints temporarily to truncate circular relationships
-        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         Team::truncate();
         Employee::truncate();
         \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
