@@ -34,6 +34,8 @@ class Employee extends Model
 
     protected $casts = [
         'doj' => 'datetime',
+        'dob' => 'datetime',
+        'lastPromotionDate' => 'datetime',
         'companyExperienceYears' => 'double',
         'totalExperienceYears' => 'double',
         'salary' => 'double',

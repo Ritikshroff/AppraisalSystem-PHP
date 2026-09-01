@@ -40,10 +40,69 @@
             background-color: #ffffff;
             border: 1px solid #e5e7eb;
         }
+        
+        /* Hide scrollbars globally */
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        *::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Shimmer Animation Effect */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+        }
+        .shimmer-text {
+            border-radius: 4px;
+            color: transparent !important;
+            user-select: none;
+        }
     </style>
     @yield('styles')
 </head>
-<body class="h-full antialiased text-black">
+<body class="h-full antialiased text-black" x-data="{ isLoading: true }" x-init="setTimeout(() => isLoading = false, 350)">
+    <!-- Global Loading Shimmer Overlay on initial load / navigation -->
+    <div x-show="isLoading" class="fixed inset-0 bg-white z-50 p-8 space-y-6 overflow-hidden pointer-events-none" transition:leave="transition ease-in duration-200" transition:leave-start="opacity-100" transition:leave-end="opacity-0">
+        <!-- Nav Shimmer -->
+        <div class="flex justify-between items-center pb-6 border-b border-gray-200">
+            <div class="h-8 w-40 shimmer rounded"></div>
+            <div class="h-8 w-32 shimmer rounded"></div>
+        </div>
+        <!-- Hero Shimmer -->
+        <div class="h-28 w-full shimmer rounded-lg"></div>
+        <!-- Table / Content Shimmer -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            <div class="md:col-span-2 space-y-4">
+                <div class="h-10 w-full shimmer rounded"></div>
+                <div class="h-16 w-full shimmer rounded"></div>
+                <div class="h-16 w-full shimmer rounded"></div>
+                <div class="h-16 w-full shimmer rounded"></div>
+                <div class="h-16 w-full shimmer rounded"></div>
+            </div>
+            <div class="space-y-4">
+                <div class="h-10 w-full shimmer rounded"></div>
+                <div class="h-32 w-full shimmer rounded"></div>
+                <div class="h-32 w-full shimmer rounded"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="min-h-full flex flex-col">
         <!-- Navigation Bar -->
         <nav class="bg-white border-b border-gray-200">
@@ -62,7 +121,7 @@
                     <div class="flex items-center gap-4">
                         <div class="flex flex-col text-right">
                             <span class="text-sm font-semibold text-black">{{ Auth::user()->name }}</span>
-                            <span class="text-xs text-blue-500 font-bold uppercase tracking-wider">{{ Auth::user()->role }}</span>
+                            <span class="text-xs text-blue-500 font-bold uppercase tracking-wider">{{ str_replace('_', ' ', Auth::user()->role) }}</span>
                         </div>
                         
                         <div class="h-6 w-px bg-gray-200"></div>

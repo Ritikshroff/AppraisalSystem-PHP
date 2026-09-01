@@ -63,4 +63,38 @@ class AdminController extends Controller
             return back()->withErrors(['admin_error' => $e->getMessage()]);
         }
     }
+
+    public function updateEmployee(Request $request, string $id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+        
+        $validated = $request->validate([
+            'fullName' => ['required', 'string', 'max:255'],
+            'employeeCode' => ['required', 'string', 'max:50'],
+            'email' => ['required', 'email', 'max:255'],
+            'department' => ['required', 'string', 'max:255'],
+            'designation' => ['required', 'string', 'max:255'],
+            'grade' => ['nullable', 'string', 'max:50'],
+            'doj' => ['nullable', 'date'],
+            'dob' => ['nullable', 'date'],
+            'lastPromotionDate' => ['nullable', 'date'],
+            'companyExperienceYears' => ['nullable', 'numeric'],
+            'totalExperienceYears' => ['nullable', 'numeric'],
+            'salary' => ['nullable', 'numeric'],
+            'managerId' => ['nullable', 'string'],
+        ]);
+
+        $employee->update($validated);
+
+        // Update corresponding User record if email or name changes
+        $user = \App\Models\User::where('employeeId', $employee->id)->first();
+        if ($user) {
+            $user->update([
+                'name' => $validated['fullName'],
+                'email' => $validated['email'],
+            ]);
+        }
+
+        return back()->with('success', 'Employee profile updated successfully.');
+    }
 }

@@ -29,5 +29,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/cycle/{id}/window', [AdminController::class, 'updateCycleWindow'])->name('cycle.window');
         Route::post('/cycle/assign', [AdminController::class, 'assignEmployeeToCycle'])->name('cycle.assign');
         Route::post('/cycle/{id}/enroll-all', [AdminController::class, 'enrollAllEmployees'])->name('cycle.enrollAll');
+        Route::post('/employee/{id}/update', [AdminController::class, 'updateEmployee'])->name('employee.update');
     });
 });

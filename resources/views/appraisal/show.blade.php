@@ -60,9 +60,31 @@
 
             <div class="flex flex-col items-end">
                 <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Final rating</span>
-                <span class="mt-1 text-lg font-bold text-black">
-                    {{ $appraisal['finalRating'] !== null ? number_format($appraisal['finalRating'], 2) : 'N/A' }}
-                </span>
+                @if($appraisal['finalRating'] !== null)
+                    <span class="mt-1 text-lg font-bold text-black">
+                        {{ number_format($appraisal['finalRating'], 2) }}
+                    </span>
+                @else
+                    <div class="relative mt-1 inline-flex items-center gap-1.5 group cursor-help">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-sm">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            Pending
+                        </span>
+                        <div class="p-1 text-gray-400 group-hover:text-blue-500 transition-colors">
+                            <i data-lucide="info" class="h-4 w-4"></i>
+                        </div>
+
+                        <!-- Tooltip Popup -->
+                        <div class="absolute right-0 top-full mt-2 hidden group-hover:block z-30 w-64 p-3 bg-gray-900 text-white text-xs rounded shadow-xl border border-gray-700 font-normal">
+                            <div class="font-bold text-amber-400 border-b border-gray-700 pb-1 mb-1">
+                                Appraisal in Progress
+                            </div>
+                            <p class="text-gray-300 text-[11px] leading-relaxed">
+                                Currently pending at <span class="font-semibold text-white">{{ $perms['currentStageLabel'] }}</span>. Final rating will be calculated after BU Head review.
+                            </p>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             @if($appraisal['hikePercentage'] !== null)
@@ -224,232 +246,263 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left 2 Cols: Main Sections -->
-            <div class="lg:col-span-2 space-y-8">
-                
-                <!-- Section 1: Self Appraisal Q&A -->
-                <div class="bg-white border border-gray-200 p-6 space-y-6">
-                    <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="user-edit" class="h-4 w-4 text-blue-500"></i>
-                        Self Appraisal Q&A
-                    </h3>
-                    
-                    <div class="space-y-5">
-                        @foreach($appraisal['sectionOneAnswers'] as $index => $qa)
-                            <div class="space-y-2">
-                                <label class="block text-xs font-bold text-black">
-                                    {{ $index + 1 }}. {{ $qa['question'] }}
-                                </label>
-                                <input type="hidden" name="sectionOneAnswers[{{ $index }}][question]" value="{{ $qa['question'] }}">
-                                @if($perms['canEditEmployeeSection'])
-                                    <textarea name="sectionOneAnswers[{{ $index }}][answer]"
-                                        class="block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-350 min-h-[120px] resize-none overflow-y-auto"
-                                        placeholder="Type your detailed response here (no word limit)...">{{ $qa['answer'] }}</textarea>
-                                @else
-                                    <div class="bg-gray-50 border border-gray-200 p-4 text-sm text-black leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">
-                                        {{ $qa['answer'] ?: 'No response provided.' }}
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
+        <div class="space-y-8 max-w-full">
+            <!-- Full Width Sections Stacked 1 through 5 -->
+            
+            <!-- Section 1: Self Appraisal Q&A -->
+            <div class="bg-white border border-gray-200 p-6 space-y-6" x-data="{ collapsed: false }">
+                <div class="flex justify-between items-center cursor-pointer select-none" @click="collapsed = !collapsed">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">1</span>
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider">Self Appraisal Q&A</h3>
                     </div>
+                    <button type="button" class="text-gray-400 hover:text-black transition-transform duration-200" :class="{ 'rotate-180': collapsed }">
+                        <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                    </button>
                 </div>
+                
+                <div class="space-y-5" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+                    @foreach($appraisal['sectionOneAnswers'] as $index => $qa)
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-black">
+                                {{ $index + 1 }}. {{ $qa['question'] }}
+                            </label>
+                            <input type="hidden" name="sectionOneAnswers[{{ $index }}][question]" value="{{ $qa['question'] }}">
+                            @if($perms['canEditEmployeeSection'])
+                                <textarea name="sectionOneAnswers[{{ $index }}][answer]" rows="3"
+                                    class="block w-full p-3 text-xs input-flat focus:border-blue-500 placeholder:text-gray-300 resize-none overflow-y-auto"
+                                    placeholder="Type your detailed response here (no word limit)...">{{ trim($qa['answer']) }}</textarea>
+                            @else
+                                <div class="bg-gray-50 border border-gray-200 p-3 text-xs text-black leading-relaxed whitespace-pre-wrap">{{ trim($qa['answer']) ?: 'No response provided.' }}</div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
 
-                <!-- Section 2: Key Responsibility Areas (KRAs) -->
-                <div class="bg-white border border-gray-200 p-6 space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-sm font-bold text-black uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="target" class="h-4 w-4 text-blue-500"></i>
-                            Key Responsibility Areas (KRAs)
-                        </h3>
+            <!-- Section 2: Key Responsibility Areas (KRAs) -->
+            <div class="bg-white border border-gray-200 p-6 space-y-6" x-data="{ collapsed: false }">
+                <div class="flex justify-between items-center cursor-pointer select-none" @click="collapsed = !collapsed">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">2</span>
+                        <h3 class="text-sm font-bold text-black uppercase tracking-wider">Key Responsibility Areas (KRAs)</h3>
+                    </div>
+                    <div class="flex items-center gap-3">
                         @if($perms['canEditEmployeeSection'] && $role !== 'EMPLOYEE')
-                            <button type="button" @click="addKra()"
+                            <button type="button" @click.stop="addKra()"
                                 class="border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1 text-xs font-bold text-black transition-colors cursor-pointer">
                                 + Add KRA
                             </button>
                         @endif
-                    </div>
-
-                    <!-- Dynamic KRA Rows Table -->
-                    <div class="overflow-x-auto border border-gray-200">
-                        <table class="w-full text-left text-sm text-black">
-                            <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
-                                <tr>
-                                    <th class="px-4 py-3">Objective / KRA / KPI</th>
-                                    <th class="px-4 py-3 w-24 text-center">Weight %</th>
-                                    <th class="px-4 py-3 w-32 text-center">Rating — Appraisee</th>
-                                    <th class="px-4 py-3">Comment — Appraisee</th>
-                                    <th class="px-4 py-3 w-32 text-center">Rating — Appraiser</th>
-                                    <th class="px-4 py-3">Comment — Appraiser</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <template x-for="(kra, index) in kras" :key="index">
-                                    <tr class="hover:bg-gray-50/50">
-                                        <!-- Objective Column -->
-                                        <td class="px-4 py-3">
-                                            <input type="hidden" :name="'kras[' + index + '][id]'" :value="kra.id">
-                                            <template x-if="'{{ $role }}' === 'EMPLOYEE' || !{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <div>
-                                                    <span class="text-xs font-semibold text-black" x-text="kra.objective"></span>
-                                                    <input type="hidden" :name="'kras[' + index + '][objective]'" :value="kra.objective">
-                                                </div>
-                                            </template>
-                                            <template x-if="'{{ $role }}' !== 'EMPLOYEE' && {{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <input type="text" :name="'kras[' + index + '][objective]'" x-model="kra.objective" required
-                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500">
-                                            </template>
-                                        </td>
-                                        <!-- Weightage Column -->
-                                        <td class="px-4 py-3 text-center">
-                                            <template x-if="'{{ $role }}' === 'EMPLOYEE' || !{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <div>
-                                                    <span class="text-xs font-bold text-gray-700" x-text="kra.weightage + '%'"></span>
-                                                    <input type="hidden" :name="'kras[' + index + '][weightage]'" :value="kra.weightage">
-                                                </div>
-                                            </template>
-                                            <template x-if="'{{ $role }}' !== 'EMPLOYEE' && {{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <input type="number" min="0" max="100" step="1" :name="'kras[' + index + '][weightage]'" x-model="kra.weightage" required
-                                                    class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
-                                            </template>
-                                        </td>
-                                        <!-- Appraisee Rating Column (Dropdown for Employee, text for others) -->
-                                        <td class="px-4 py-3 text-center">
-                                            <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <select :name="'kras[' + index + '][appraiseeRating]'" x-model="kra.appraiseeRating" required
-                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center">
-                                                    <option value="">Select</option>
-                                                    <option value="A+">A+</option>
-                                                    <option value="A">A</option>
-                                                    <option value="B+">B+</option>
-                                                    <option value="B">B</option>
-                                                    <option value="C">C</option>
-                                                    <option value="D">D</option>
-                                                </select>
-                                            </template>
-                                            <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <div>
-                                                    <span class="text-xs font-bold text-blue-500" x-text="kra.appraiseeRating || '-'"></span>
-                                                    <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
-                                                </div>
-                                            </template>
-                                        </td>
-                                        <!-- Appraisee Comment Column (Editable text for Employee, text for others) -->
-                                        <td class="px-4 py-3">
-                                            <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <input type="text" :name="'kras[' + index + '][appraiseeComment]'" x-model="kra.appraiseeComment" required
-                                                    placeholder="Enter self-comment..."
-                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white">
-                                            </template>
-                                            <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                                <div>
-                                                    <span class="text-xs text-gray-700 whitespace-pre-wrap" x-text="kra.appraiseeComment || '-'"></span>
-                                                    <input type="hidden" :name="'kras[' + index + '][appraiseeComment]'" :value="kra.appraiseeComment">
-                                                </div>
-                                            </template>
-                                        </td>
-                                        <!-- Appraiser Rating Column -->
-                                        <td class="px-4 py-3 text-center">
-                                            @if($status === 'DRAFT')
-                                                <!-- Locked/Later stage -->
-                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
-                                                    <i data-lucide="lock" class="h-3 w-3"></i> Later
-                                                </span>
-                                            @else
-                                                <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                    <select :name="'kras[' + index + '][appraiserRating]'" x-model="kra.appraiserRating" required
-                                                        class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center">
-                                                        <option value="">Select</option>
-                                                        <option value="A+">A+</option>
-                                                        <option value="A">A</option>
-                                                        <option value="B+">B+</option>
-                                                        <option value="B">B</option>
-                                                        <option value="C">C</option>
-                                                        <option value="D">D</option>
-                                                    </select>
-                                                </template>
-                                                <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                    <div>
-                                                        <span class="text-xs font-bold text-gray-750" x-text="kra.appraiserRating || '-'"></span>
-                                                        <input type="hidden" :name="'kras[' + index + '][appraiserRating]'" :value="kra.appraiserRating">
-                                                    </div>
-                                                </template>
-                                            @endif
-                                        </td>
-                                        <!-- Appraiser Comment Column -->
-                                        <td class="px-4 py-3">
-                                            @if($status === 'DRAFT')
-                                                <!-- Locked/Later stage -->
-                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
-                                                    <i data-lucide="lock" class="h-3 w-3"></i> Later
-                                                </span>
-                                            @else
-                                                <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                    <input type="text" :name="'kras[' + index + '][comments]'" x-model="kra.comments" required
-                                                        placeholder="Enter manager comment..."
-                                                        class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500">
-                                                </template>
-                                                <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                    <div>
-                                                        <span class="text-xs text-gray-600 italic whitespace-pre-wrap" x-text="kra.comments || '-'"></span>
-                                                        <input type="hidden" :name="'kras[' + index + '][comments]'" :value="kra.comments">
-                                                    </div>
-                                                </template>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                            <tfoot class="border-t border-gray-200 bg-gray-50 font-bold text-black font-mono">
-                                <tr>
-                                    <td class="px-4 py-3 text-xs">Totals & Averages</td>
-                                    <td class="px-4 py-3 text-center text-xs" :class="totalWeightage === 100 ? 'text-black' : 'text-red-600'" x-text="totalWeightage + '%'"></td>
-                                    <td class="px-4 py-3 text-center text-xs text-blue-500" x-text="appraiseeKraAverage"></td>
-                                    <td class="px-4 py-3"></td>
-                                    <td class="px-4 py-3 text-center text-xs text-gray-700" x-text="appraiserKraAverage"></td>
-                                    <td class="px-4 py-3"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <button type="button" class="text-gray-400 hover:text-black transition-transform duration-200" :class="{ 'rotate-180': collapsed }">
+                            <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Section 4: Capability / Competency Assessment -->
-                <div class="bg-white border border-gray-200 p-6 space-y-5">
-                    <!-- Section Header -->
+                <!-- Dynamic KRA Rows Table -->
+                <div class="border border-gray-200 no-scrollbar" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+                    <table class="w-full text-left text-sm text-black">
+                        <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
+                            <tr>
+                                <th class="px-4 py-3">Objective / KRA / KPI</th>
+                                <th class="px-4 py-3 w-24 text-center">Weight %</th>
+                                <th class="px-4 py-3 w-32 text-center">Rating — Appraisee</th>
+                                <th class="px-4 py-3">Comment — Appraisee</th>
+                                <th class="px-4 py-3 w-32 text-center">Rating — Appraiser</th>
+                                <th class="px-4 py-3">Comment — Appraiser</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <template x-for="(kra, index) in kras" :key="index">
+                                <tr class="hover:bg-gray-50/50 relative z-10 hover:z-20">
+                                    <!-- Objective Column -->
+                                    <td class="px-4 py-3">
+                                        <input type="hidden" :name="'kras[' + index + '][id]'" :value="kra.id">
+                                        <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <input type="text" :name="'kras[' + index + '][objective]'" x-model="kra.objective" required
+                                                placeholder="Enter Objective / KRA / KPI..."
+                                                class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white">
+                                        </template>
+                                        <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <div>
+                                                <span class="text-xs font-semibold text-black" x-text="kra.objective || '-'"></span>
+                                                <input type="hidden" :name="'kras[' + index + '][objective]'" :value="kra.objective">
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <!-- Weightage Column -->
+                                    <td class="px-4 py-3 text-center">
+                                        <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <div>
+                                                <span class="text-xs font-bold text-gray-700" x-text="kra.weightage + '%'"></span>
+                                                <input type="hidden" :name="'kras[' + index + '][weightage]'" :value="kra.weightage">
+                                            </div>
+                                        </template>
+                                        <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <input type="number" min="0" max="100" step="1" :name="'kras[' + index + '][weightage]'" x-model="kra.weightage" required
+                                                class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
+                                        </template>
+                                    </td>
+                                    <!-- Appraisee Rating Column (Custom Dropdown for Employee, text for others) -->
+                                    <td class="px-4 py-3 text-center min-w-[110px]">
+                                        <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                                <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full flex items-center justify-between py-1.5 px-2.5 text-xs bg-white border border-gray-300 rounded font-semibold text-black hover:border-blue-500 focus:outline-none transition-colors">
+                                                    <span x-text="kra.appraiseeRating || 'Select'" :class="kra.appraiseeRating ? 'text-blue-600 font-bold' : 'text-gray-400'"></span>
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </button>
+                                                <div x-show="open" x-transition.opacity.duration.150ms x-cloak
+                                                    class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
+                                                    <template x-for="opt in ['A+', 'A', 'B+', 'B', 'C', 'D']" :key="opt">
+                                                        <div @click="kra.appraiseeRating = opt; open = false" 
+                                                            class="px-3 py-1.5 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between text-left"
+                                                            :class="kra.appraiseeRating === opt ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                                            <span x-text="opt"></span>
+                                                            <svg x-show="kra.appraiseeRating === opt" class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <div>
+                                                <span class="text-xs font-bold text-blue-500" x-text="kra.appraiseeRating || '-'"></span>
+                                                <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <!-- Appraisee Comment Column (Editable text for Employee, text for others) -->
+                                    <td class="px-4 py-3">
+                                        <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <textarea :name="'kras[' + index + '][appraiseeComment]'" x-model="kra.appraiseeComment" rows="2"
+                                                class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white" placeholder="Self comment..."></textarea>
+                                        </template>
+                                        <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
+                                            <div>
+                                                <p class="text-xs text-gray-700 font-sans whitespace-pre-line" x-text="kra.appraiseeComment || '- '"></p>
+                                                <input type="hidden" :name="'kras[' + index + '][appraiseeComment]'" :value="kra.appraiseeComment">
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <!-- Appraiser Rating Column -->
+                                    <td class="px-4 py-3 text-center min-w-[110px]">
+                                        @if($status === 'DRAFT')
+                                            <!-- Locked/Later stage -->
+                                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
+                                                <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                            </span>
+                                        @else
+                                            <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
+                                                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                                    <input type="hidden" :name="'kras[' + index + '][appraiserRating]'" :value="kra.appraiserRating">
+                                                    <button type="button" @click="open = !open" 
+                                                        class="w-full flex items-center justify-between py-1.5 px-2.5 text-xs bg-white border border-gray-300 rounded font-semibold text-black hover:border-blue-500 focus:outline-none transition-colors">
+                                                        <span x-text="kra.appraiserRating || 'Select'" :class="kra.appraiserRating ? 'text-gray-900 font-bold' : 'text-gray-400'"></span>
+                                                        <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                    </button>
+                                                    <div x-show="open" x-transition.opacity.duration.150ms x-cloak
+                                                        class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
+                                                        <template x-for="opt in ['A+', 'A', 'B+', 'B', 'C', 'D']" :key="opt">
+                                                            <div @click="kra.appraiserRating = opt; open = false" 
+                                                                class="px-3 py-1.5 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between text-left"
+                                                                :class="kra.appraiserRating === opt ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                                                <span x-text="opt"></span>
+                                                                <svg x-show="kra.appraiserRating === opt" class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
+                                                <div>
+                                                    <span class="text-xs font-bold text-gray-750" x-text="kra.appraiserRating || '-'"></span>
+                                                    <input type="hidden" :name="'kras[' + index + '][appraiserRating]'" :value="kra.appraiserRating">
+                                                </div>
+                                            </template>
+                                        @endif
+                                    </td>
+                                    <!-- Appraiser Comment Column -->
+                                    <td class="px-4 py-3">
+                                        @if($status === 'DRAFT')
+                                            <!-- Locked/Later stage -->
+                                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
+                                                <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                            </span>
+                                        @else
+                                            <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
+                                                <textarea :name="'kras[' + index + '][appraiserComment]'" x-model="kra.appraiserComment" rows="2"
+                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white" placeholder="Appraiser comment..."></textarea>
+                                            </template>
+                                            <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
+                                                <div>
+                                                    <p class="text-xs text-gray-700 font-sans whitespace-pre-line" x-text="kra.appraiserComment || '- '"></p>
+                                                    <input type="hidden" :name="'kras[' + index + '][appraiserComment]'" :value="kra.appraiserComment">
+                                                </div>
+                                            </template>
+                                        @endif
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                        <tfoot class="border-t border-gray-200 bg-gray-50 font-bold text-black font-mono">
+                            <tr>
+                                <td class="px-4 py-3 text-xs">Totals & Averages</td>
+                                <td class="px-4 py-3 text-center text-xs" :class="totalWeightage === 100 ? 'text-black' : 'text-red-600'" x-text="totalWeightage + '%'"></td>
+                                <td class="px-4 py-3 text-center text-xs text-blue-500" x-text="appraiseeKraAverage"></td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3 text-center text-xs text-gray-700" x-text="appraiserKraAverage"></td>
+                                <td class="px-4 py-3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section 3: Capability / Competency Assessment -->
+            <div class="bg-white border border-gray-200 p-6 space-y-5" x-data="{ collapsed: false }">
+                <!-- Section Header -->
+                <div class="flex justify-between items-center cursor-pointer select-none" @click="collapsed = !collapsed">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">4</span>
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">3</span>
                             <h3 class="text-sm font-bold text-black uppercase tracking-wider">Capability / Competency Assessment</h3>
                         </div>
                         <p class="text-xs text-gray-500 pl-8">Appraisee and Appraiser score each capability for current role requirements.</p>
-                        <!-- Rating Legend with initials -->
-                        <div class="mt-3 pl-8 flex flex-wrap items-center gap-3">
-                            <span class="inline-flex items-center gap-1.5">
-                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-red-100 text-red-600 text-[11px] font-black">P</span>
-                                <span class="text-[10px] text-gray-500 font-semibold">Poor <span class="text-gray-400">(1–3)</span></span>
-                            </span>
-                            <span class="text-gray-300">|</span>
-                            <span class="inline-flex items-center gap-1.5">
-                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-yellow-100 text-yellow-700 text-[11px] font-black">S</span>
-                                <span class="text-[10px] text-gray-500 font-semibold">Satisfactory <span class="text-gray-400">(4–6)</span></span>
-                            </span>
-                            <span class="text-gray-300">|</span>
-                            <span class="inline-flex items-center gap-1.5">
-                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-green-100 text-green-700 text-[11px] font-black">G</span>
-                                <span class="text-[10px] text-gray-500 font-semibold">Good <span class="text-gray-400">(7–9)</span></span>
-                            </span>
-                            <span class="text-gray-300">|</span>
-                            <span class="inline-flex items-center gap-1.5">
-                                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-blue-700 text-[11px] font-black">E</span>
-                                <span class="text-[10px] text-gray-500 font-semibold">Excellent <span class="text-gray-400">(10)</span></span>
-                            </span>
-                        </div>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-black transition-transform duration-200" :class="{ 'rotate-180': collapsed }">
+                        <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                    </button>
+                </div>
+
+                <div x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-5">
+                    <!-- Rating Legend with initials -->
+                    <div class="pl-8 flex flex-wrap items-center gap-3">
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-red-100 text-red-600 text-[11px] font-black">P</span>
+                            <span class="text-[10px] text-gray-500 font-semibold">Poor <span class="text-gray-400">(1–3)</span></span>
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-yellow-100 text-yellow-700 text-[11px] font-black">S</span>
+                            <span class="text-[10px] text-gray-500 font-semibold">Satisfactory <span class="text-gray-400">(4–6)</span></span>
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-green-100 text-green-700 text-[11px] font-black">G</span>
+                            <span class="text-[10px] text-gray-500 font-semibold">Good <span class="text-gray-400">(7–9)</span></span>
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-blue-700 text-[11px] font-black">E</span>
+                            <span class="text-[10px] text-gray-500 font-semibold">Excellent <span class="text-gray-400">(10)</span></span>
+                        </span>
                     </div>
 
                     <!-- Competency Table -->
-                    <div class="overflow-x-auto border border-gray-200">
+                    <div class="border border-gray-200 no-scrollbar">
                         <table class="w-full text-left text-sm text-black">
                             <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
                                 <tr>
@@ -461,7 +514,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 <template x-for="(comp, index) in competencies" :key="index">
-                                    <tr class="hover:bg-gray-50/50">
+                                    <tr class="hover:bg-gray-50/50 relative z-10 hover:z-20">
                                         <td class="px-3 py-3 text-xs text-gray-400 font-bold text-center" x-text="index + 1"></td>
                                         <td class="px-4 py-3">
                                             <input type="hidden" :name="'competencyRatings[' + index + '][competencyName]'" :value="comp.competencyName">
@@ -472,13 +525,26 @@
                                         <td class="px-4 py-3">
                                             @if($perms['canEditEmployeeSection'])
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <select :name="'competencyRatings[' + index + '][employeeScore]'" x-model="comp.employeeScore"
-                                                        class="w-16 py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center font-bold">
-                                                        <option value="">—</option>
-                                                        @for($s = 1; $s <= 10; $s++)
-                                                            <option value="{{ $s }}">{{ $s }}</option>
-                                                        @endfor
-                                                    </select>
+                                                    <div class="relative w-16" x-data="{ open: false }" @click.outside="open = false">
+                                                        <input type="hidden" :name="'competencyRatings[' + index + '][employeeScore]'" :value="comp.employeeScore">
+                                                        <button type="button" @click="open = !open" 
+                                                            class="w-full flex items-center justify-between py-1.5 px-2 text-xs bg-white border border-gray-300 rounded font-bold text-black hover:border-blue-500 focus:outline-none transition-colors">
+                                                            <span x-text="comp.employeeScore || '—'" :class="comp.employeeScore ? 'text-blue-600' : 'text-gray-400'"></span>
+                                                            <svg class="w-3 h-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                        </button>
+                                                        <div x-show="open" x-transition.opacity.duration.150ms x-cloak
+                                                            class="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
+                                                            <div @click="comp.employeeScore = ''; open = false" class="px-2.5 py-1 hover:bg-gray-100 cursor-pointer text-center text-gray-400 font-bold">—</div>
+                                                            <template x-for="s in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="s">
+                                                                <div @click="comp.employeeScore = s; open = false" 
+                                                                    class="px-2.5 py-1 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between"
+                                                                    :class="comp.employeeScore == s ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                                                    <span x-text="s"></span>
+                                                                    <svg x-show="comp.employeeScore == s" class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
                                                     <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-black flex-shrink-0"
                                                         :class="{
                                                             'bg-red-100 text-red-600':       comp.employeeScore >= 1 && comp.employeeScore <= 3,
@@ -527,13 +593,26 @@
                                                 </div>
                                             @elseif($perms['canEditManagerSection'])
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <select :name="'competencyRatings[' + index + '][appraiserScore]'" x-model="comp.appraiserScore"
-                                                        class="w-16 py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white text-center font-bold">
-                                                        <option value="">—</option>
-                                                        @for($s = 1; $s <= 10; $s++)
-                                                            <option value="{{ $s }}">{{ $s }}</option>
-                                                        @endfor
-                                                    </select>
+                                                    <div class="relative w-16" x-data="{ open: false }" @click.outside="open = false">
+                                                        <input type="hidden" :name="'competencyRatings[' + index + '][appraiserScore]'" :value="comp.appraiserScore">
+                                                        <button type="button" @click="open = !open" 
+                                                            class="w-full flex items-center justify-between py-1.5 px-2 text-xs bg-white border border-gray-300 rounded font-bold text-black hover:border-blue-500 focus:outline-none transition-colors">
+                                                            <span x-text="comp.appraiserScore || '—'" :class="comp.appraiserScore ? 'text-gray-900' : 'text-gray-400'"></span>
+                                                            <svg class="w-3 h-3 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                        </button>
+                                                        <div x-show="open" x-transition.opacity.duration.150ms x-cloak
+                                                            class="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
+                                                            <div @click="comp.appraiserScore = ''; open = false" class="px-2.5 py-1 hover:bg-gray-100 cursor-pointer text-center text-gray-400 font-bold">—</div>
+                                                            <template x-for="s in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="s">
+                                                                <div @click="comp.appraiserScore = s; open = false" 
+                                                                    class="px-2.5 py-1 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between"
+                                                                    :class="comp.appraiserScore == s ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                                                    <span x-text="s"></span>
+                                                                    <svg x-show="comp.appraiserScore == s" class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
                                                     <span class="inline-flex items-center justify-center w-6 h-6 rounded text-[11px] font-black flex-shrink-0"
                                                         :class="{
                                                             'bg-red-100 text-red-600':       comp.appraiserScore >= 1 && comp.appraiserScore <= 3,
@@ -589,42 +668,43 @@
                         </table>
                     </div>
                 </div>
-
             </div>
 
-            <!-- Right 1 Col: Appraiser, Reviewer, Special Appeal -->
-            <div class="space-y-6">
-
-                <!-- Section 5: Appraiser Section (To be filled by Appraiser) -->
+                <!-- Section 4: Appraiser Section (To be filled by Appraiser) -->
                 @php
                     $showAppraiserSection = $perms['canEditManagerSection']
                         || !empty($appraisal['appraiserSection']['recommendation'])
                         || $appraisal['appraiserSection']['overallRating'] !== null;
                 @endphp
                 @if($showAppraiserSection || $role !== 'EMPLOYEE')
-                    <div class="bg-white border-l-4 border-blue-500 border-y border-r border-gray-200 p-5 space-y-4">
+                    <div class="bg-white border-l-4 border-blue-500 border-y border-r border-gray-200 p-5 space-y-4" x-data="{ collapsed: false }">
                         <!-- Header -->
-                        <div>
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">5</span>
-                                <h3 class="text-sm font-bold text-black uppercase tracking-wider">Appraiser Section</h3>
+                        <div class="flex justify-between items-center cursor-pointer select-none" @click="collapsed = !collapsed">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-bold">4</span>
+                                    <h3 class="text-sm font-bold text-black uppercase tracking-wider">Appraiser Section</h3>
+                                </div>
+                                <p class="text-[11px] text-gray-500 pl-8">
+                                    @if($perms['canEditManagerSection'])
+                                        Fill your overall assessment and recommendation below.
+                                    @else
+                                        To be filled by Appraiser.
+                                    @endif
+                                </p>
                             </div>
-                            <p class="text-[11px] text-gray-500 pl-8">
-                                @if($perms['canEditManagerSection'])
-                                    Fill your overall assessment and recommendation below.
-                                @else
-                                    To be filled by Appraiser.
-                                @endif
-                            </p>
+                            <button type="button" class="text-gray-400 hover:text-black transition-transform duration-200" :class="{ 'rotate-180': collapsed }">
+                                <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                            </button>
                         </div>
 
                         @if(!$perms['canEditManagerSection'] && $appraisal['appraiserSection']['overallRating'] === null && empty($appraisal['appraiserSection']['recommendation']))
-                            <div class="flex items-center gap-2 py-3 text-xs text-gray-400 italic">
+                            <div class="flex items-center gap-2 py-3 text-xs text-gray-400 italic" x-show="!collapsed">
                                 <i data-lucide="clock" class="h-4 w-4"></i>
                                 Awaiting Appraiser review.
                             </div>
                         @else
-                            <div class="space-y-4">
+                            <div class="space-y-4" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                                 <!-- Overall Rating -->
                                 <div>
                                     <label for="appraiser_overall_rating" class="block text-xs font-bold text-black">Overall Rating (1–10)</label>
@@ -686,7 +766,7 @@
                     </div>
                 @endif
 
-                <!-- Section 6: Reviewer Section (To be filled by BU Head / Reviewer) -->
+                <!-- Section 5: Reviewer Section (To be filled by BU Head / Reviewer) -->
                 @php
                     $showReviewerSection = $perms['canEditBUHeadSection']
                         || !empty($appraisal['reviewerSection']['comments'])
@@ -694,29 +774,34 @@
                         || $appraisal['buHeadReview']['finalRating'] !== null;
                 @endphp
                 @if($showReviewerSection || $role !== 'EMPLOYEE')
-                    <div class="bg-white border-l-4 border-gray-800 border-y border-r border-gray-200 p-5 space-y-4">
+                    <div class="bg-white border-l-4 border-gray-800 border-y border-r border-gray-200 p-5 space-y-4" x-data="{ collapsed: false }">
                         <!-- Header -->
-                        <div>
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-800 text-white text-[10px] font-bold">6</span>
-                                <h3 class="text-sm font-bold text-black uppercase tracking-wider">Reviewer Section</h3>
+                        <div class="flex justify-between items-center cursor-pointer select-none" @click="collapsed = !collapsed">
+                            <div>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-800 text-white text-[10px] font-bold">5</span>
+                                    <h3 class="text-sm font-bold text-black uppercase tracking-wider">Reviewer Section</h3>
+                                </div>
+                                <p class="text-[11px] text-gray-500 pl-8">
+                                    @if($perms['canEditBUHeadSection'])
+                                        Complete the final review and rating below.
+                                    @else
+                                        To be filled by Reviewer / BU Head.
+                                    @endif
+                                </p>
                             </div>
-                            <p class="text-[11px] text-gray-500 pl-8">
-                                @if($perms['canEditBUHeadSection'])
-                                    Complete the final review and rating below.
-                                @else
-                                    To be filled by Reviewer / BU Head.
-                                @endif
-                            </p>
+                            <button type="button" class="text-gray-400 hover:text-black transition-transform duration-200" :class="{ 'rotate-180': collapsed }">
+                                <i data-lucide="chevron-down" class="h-5 w-5"></i>
+                            </button>
                         </div>
 
                         @if(!$perms['canEditBUHeadSection'] && $appraisal['reviewerSection']['rating'] === null && empty($appraisal['reviewerSection']['comments']))
-                            <div class="flex items-center gap-2 py-3 text-xs text-gray-400 italic">
+                            <div class="flex items-center gap-2 py-3 text-xs text-gray-400 italic" x-show="!collapsed">
                                 <i data-lucide="clock" class="h-4 w-4"></i>
                                 Awaiting Reviewer.
                             </div>
                         @else
-                            <div class="space-y-4">
+                            <div class="space-y-4" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
                                 <!-- Reviewer Comments -->
                                 <div>
                                     <label for="reviewer_comments" class="block text-xs font-bold text-black">Reviewer Comments</label>
@@ -780,11 +865,15 @@
                                         <div>
                                             <label for="promotion_recommended" class="block text-xs font-bold text-black">Promotion</label>
                                             @if($perms['canEditBUHeadSection'])
-                                                <select id="promotion_recommended" name="promotionRecommended"
-                                                    class="mt-1 block w-full border border-gray-300 py-2 px-3 text-black focus:outline-none focus:border-blue-500 text-sm">
-                                                    <option value="0" {{ !$appraisal['promotionRecommended'] ? 'selected' : '' }}>No</option>
-                                                    <option value="1" {{ $appraisal['promotionRecommended'] ? 'selected' : '' }}>Yes</option>
-                                                </select>
+                                                <x-select 
+                                                    name="promotionRecommended" 
+                                                    :value="$appraisal['promotionRecommended'] ? '1' : '0'" 
+                                                    :options="[
+                                                        ['value' => '0', 'label' => 'No'],
+                                                        ['value' => '1', 'label' => 'Yes']
+                                                    ]" 
+                                                    class="mt-1"
+                                                />
                                             @else
                                                 <span class="mt-1 inline-flex items-center px-2.5 py-0.5 text-xs font-bold {{ $appraisal['promotionRecommended'] ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' }}">
                                                     {{ $appraisal['promotionRecommended'] ? 'Yes' : 'No' }}
@@ -894,12 +983,17 @@
                                     <div class="space-y-4 border-t border-gray-150 pt-4">
                                         <div>
                                             <label for="special_appeal_status" class="block text-xs font-bold text-black">Action Decision</label>
-                                            <select id="special_appeal_status" name="specialAppealStatus"
-                                                class="mt-1 block w-full border border-gray-300 py-2 px-3 text-black focus:outline-none focus:border-blue-500 text-sm">
-                                                <option value="PENDING" {{ $appraisal['specialAppealStatus'] === 'PENDING' ? 'selected' : '' }}>Pending Review</option>
-                                                <option value="APPROVED" {{ $appraisal['specialAppealStatus'] === 'APPROVED' ? 'selected' : '' }}>Approve Appeal (Modify Decisions)</option>
-                                                <option value="REJECTED" {{ $appraisal['specialAppealStatus'] === 'REJECTED' ? 'selected' : '' }}>Reject Appeal (Keep Decisions)</option>
-                                            </select>
+                                            <x-select 
+                                                name="specialAppealStatus" 
+                                                :value="$appraisal['specialAppealStatus'] ?? 'PENDING'" 
+                                                :options="[
+                                                    ['value' => 'PENDING', 'label' => 'Pending Review'],
+                                                    ['value' => 'APPROVED', 'label' => 'Approve Appeal (Modify Decisions)'],
+                                                    ['value' => 'REJECTED', 'label' => 'Reject Appeal (Keep Decisions)']
+                                                ]" 
+                                                class="mt-1"
+                                            />
+                                        </div>
                                         </div>
                                         <div>
                                             <label for="special_appeal_comments" class="block text-xs font-bold text-black">Appeal Decision Comments</label>

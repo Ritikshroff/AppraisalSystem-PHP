@@ -23,12 +23,17 @@
 
                 <div>
                     <label for="role" class="block text-sm font-medium text-black">Select Role</label>
-                    <select id="role" name="role" x-model="role"
-                        class="mt-1 block w-full border border-gray-300 py-2.5 px-3 text-black focus:outline-none focus:border-blue-500 sm:text-sm">
-                        <option value="EMPLOYEE">Employee</option>
-                        <option value="MANAGER">Manager</option>
-                        <option value="BU_HEAD">BU Head</option>
-                    </select>
+                    <x-select 
+                        name="role" 
+                        model="role" 
+                        :value="old('role', 'EMPLOYEE')" 
+                        :options="[
+                            ['value' => 'EMPLOYEE', 'label' => 'Employee'],
+                            ['value' => 'MANAGER', 'label' => 'Manager'],
+                            ['value' => 'BU_HEAD', 'label' => 'BU Head']
+                        ]" 
+                        class="mt-1"
+                    />
                 </div>
 
                 <div>
@@ -64,13 +69,13 @@
 
                 <div x-show="role !== 'BU_HEAD'" x-cloak>
                     <label for="teamId" class="block text-sm font-medium text-black">Assigned Team</label>
-                    <select id="teamId" name="teamId"
-                        class="mt-1 block w-full border border-gray-300 py-2.5 px-3 text-black focus:outline-none focus:border-blue-500 sm:text-sm">
-                        <option value="">-- Select Team --</option>
-                        @foreach($teams as $team)
-                            <option value="{{ $team->id }}" {{ old('teamId') === $team->id ? 'selected' : '' }}>{{ $team->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-select 
+                        name="teamId" 
+                        placeholder="-- Select Team --" 
+                        :value="old('teamId')" 
+                        :options="array_merge([['value' => '', 'label' => '-- Select Team --']], array_map(fn($t) => ['value' => $t->id, 'label' => $t->name], $teams->all()))" 
+                        class="mt-1"
+                    />
                     @error('teamId')
                         <p class="mt-2 text-xs text-red-600 font-medium">{{ $message }}</p>
                     @enderror

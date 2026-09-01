@@ -56,4 +56,41 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# AppraisalSystem-PHP
+# Appraisal System - User Login Credentials
+
+All seeded user accounts share the same default password:
+
+> **Default Password:** `Cybermedia@123`
+
+---
+
+### 👑 Reviewer / BU Head
+| Name | Role | Email | Password |
+|---|---|---|---|
+| **PR Team** | `BU_HEAD` | `pram@cmr.net` | `Cybermedia@123` |
+
+---
+
+### 🛡️ HR Administrator
+| Name | Role | Email | Password |
+|---|---|---|---|
+| **HR Admin** | `HR` | `hr@cmrindia.com` | `Cybermedia@123` |
+
+---
+
+### 👔 Appraisers (Managers)
+| Name | Role | Email | Password |
+|---|---|---|---|
+| **Mudrika Ram** | `MANAGER` | `pram@cmrindia.com` | `Cybermedia@123` |
+| **Sugandha Srivastava** | `MANAGER` | `srivastava@cmrindia.com` | `Cybermedia@123` |
+
+---
+
+### 👤 Employees (Appraisees)
+| Name | Designation | Grade | Email | Password | Appraiser (Manager) |
+|---|---|---|---|---|---|
+| **Nugent Srivastava** | Sr. Manager - Research | VIII | `nsrivastava@cmrindia.com` | `Cybermedia@123` | Mudrika Ram |
+| **Himanshi Pant** | Assistant Manager - Research | IVD | `hpant@cmrindia.com` | `Cybermedia@123` | Sugandha Srivastava |
+| **Nalini Kanta Nayak** | Manager - Research Operations | VB | `nnayak@cmrindia.com` | `Cybermedia@123` | Sugandha Srivastava |
+| **Saurabh Pandey** | Manager - Research | VB | `spandey@cmrindia.com` | `Cybermedia@123` | Sugandha Srivastava |
+
