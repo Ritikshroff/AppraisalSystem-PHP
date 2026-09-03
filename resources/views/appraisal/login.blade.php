@@ -47,13 +47,19 @@
             </form>
 
             <div class="mt-6 border-t border-gray-200 pt-6">
-                <p class="text-xs text-center text-gray-500 leading-5">
-                    Demo accounts are pre-seeded. You can log in using:
-                    <br><code class="text-gray-800">meera.kapoor@cmrsl.example</code> (BU Head)
-                    <br><code class="text-gray-800">sanjay.mishra@cmrsl.example</code> (HR)
-                    <br><code class="text-gray-800">anita.rao@cmrsl.example</code> (MANAGER)
-                    <br><code class="text-gray-800">rahul.sharma@cmrsl.example</code> (EMPLOYEE)
-                    <br>Password for all: <code class="text-gray-800">Cybermedia@123</code>
+                <p class="text-xs text-center text-gray-500 font-semibold mb-2">Available Accounts:</p>
+                <div class="space-y-1.5 text-xs text-center">
+                    @forelse($users ?? [] as $u)
+                        <div>
+                            <code class="text-gray-900 font-mono font-bold">{{ $u->email }}</code>
+                            <span class="text-gray-500 text-[11px]">({{ str_replace('_', ' ', strtoupper($u->role)) }})</span>
+                        </div>
+                    @empty
+                        <p class="text-gray-400 italic">No users found.</p>
+                    @endforelse
+                </div>
+                <p class="mt-3 text-xs text-center text-gray-500">
+                    Password for all: <code class="text-gray-900 font-mono font-bold">Cybermedia@123</code>
                 </p>
             </div>
         </div>

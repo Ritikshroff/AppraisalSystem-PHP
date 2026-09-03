@@ -301,23 +301,23 @@
                 </div>
 
                 <!-- Dynamic KRA Rows Table -->
-                <div class="border border-gray-200 no-scrollbar" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-                    <table class="w-full text-left text-sm text-black">
+                <div class="border border-gray-200 no-scrollbar overflow-x-auto" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+                    <table class="w-full text-left text-sm text-black table-fixed">
                         <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
                             <tr>
-                                <th class="px-4 py-3">Objective / KRA / KPI</th>
-                                <th class="px-4 py-3 w-24 text-center">Weight %</th>
-                                <th class="px-4 py-3 w-32 text-center">Rating — Appraisee</th>
-                                <th class="px-4 py-3">Comment — Appraisee</th>
-                                <th class="px-4 py-3 w-32 text-center">Rating — Appraiser</th>
-                                <th class="px-4 py-3">Comment — Appraiser</th>
+                                <th class="px-4 py-3 w-1/4">Objective / KRA / KPI</th>
+                                <th class="px-3 py-3 w-20 text-center">Weight %</th>
+                                <th class="px-3 py-3 w-28 text-center">Rating — Appraisee</th>
+                                <th class="px-4 py-3 w-1/4">Comment — Appraisee</th>
+                                <th class="px-3 py-3 w-28 text-center">Rating — Appraiser</th>
+                                <th class="px-4 py-3 w-1/4">Comment — Appraiser</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             <template x-for="(kra, index) in kras" :key="index">
                                 <tr class="hover:bg-gray-50/50 relative z-10 hover:z-20">
                                     <!-- Objective Column -->
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3 align-top">
                                         <input type="hidden" :name="'kras[' + index + '][id]'" :value="kra.id">
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <input type="text" :name="'kras[' + index + '][objective]'" x-model="kra.objective" required
@@ -326,13 +326,13 @@
                                         </template>
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <div>
-                                                <span class="text-xs font-semibold text-black" x-text="kra.objective || '-'"></span>
+                                                <span class="text-xs font-semibold text-black break-words" x-text="kra.objective || '-'"></span>
                                                 <input type="hidden" :name="'kras[' + index + '][objective]'" :value="kra.objective">
                                             </div>
                                         </template>
                                     </td>
                                     <!-- Weightage Column -->
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-3 py-3 text-center align-top">
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <div>
                                                 <span class="text-xs font-bold text-gray-700" x-text="kra.weightage + '%'"></span>
@@ -344,8 +344,8 @@
                                                 class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
                                         </template>
                                     </td>
-                                    <!-- Appraisee Rating Column (Custom Dropdown for Employee, text for others) -->
-                                    <td class="px-4 py-3 text-center min-w-[110px]">
+                                    <!-- Appraisee Rating Column -->
+                                    <td class="px-3 py-3 text-center align-top">
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                                                 <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
@@ -374,21 +374,21 @@
                                             </div>
                                         </template>
                                     </td>
-                                    <!-- Appraisee Comment Column (Editable text for Employee, text for others) -->
-                                    <td class="px-4 py-3">
+                                    <!-- Appraisee Comment Column -->
+                                    <td class="px-4 py-3 align-top">
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <textarea :name="'kras[' + index + '][appraiseeComment]'" x-model="kra.appraiseeComment" rows="2"
                                                 class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white" placeholder="Self comment..."></textarea>
                                         </template>
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <div>
-                                                <p class="text-xs text-gray-700 font-sans whitespace-pre-line" x-text="kra.appraiseeComment || '- '"></p>
+                                                <p class="text-xs text-gray-700 font-sans whitespace-pre-line break-words" x-text="kra.appraiseeComment || '- '"></p>
                                                 <input type="hidden" :name="'kras[' + index + '][appraiseeComment]'" :value="kra.appraiseeComment">
                                             </div>
                                         </template>
                                     </td>
                                     <!-- Appraiser Rating Column -->
-                                    <td class="px-4 py-3 text-center min-w-[110px]">
+                                    <td class="px-3 py-3 text-center align-top">
                                         @if($status === 'DRAFT')
                                             <!-- Locked/Later stage -->
                                             <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
@@ -425,7 +425,7 @@
                                         @endif
                                     </td>
                                     <!-- Appraiser Comment Column -->
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3 align-top">
                                         @if($status === 'DRAFT')
                                             <!-- Locked/Later stage -->
                                             <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
@@ -434,11 +434,11 @@
                                         @else
                                             <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
                                                 <textarea :name="'kras[' + index + '][appraiserComment]'" x-model="kra.appraiserComment" rows="2"
-                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white" placeholder="Appraiser comment..."></textarea>
+                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white border border-gray-300 rounded" placeholder="Appraiser comment..."></textarea>
                                             </template>
                                             <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
                                                 <div>
-                                                    <p class="text-xs text-gray-700 font-sans whitespace-pre-line" x-text="kra.appraiserComment || '- '"></p>
+                                                    <p class="text-xs text-gray-700 font-sans whitespace-pre-line break-words" x-text="kra.appraiserComment || '- '"></p>
                                                     <input type="hidden" :name="'kras[' + index + '][appraiserComment]'" :value="kra.appraiserComment">
                                                 </div>
                                             </template>
@@ -450,10 +450,10 @@
                         <tfoot class="border-t border-gray-200 bg-gray-50 font-bold text-black font-mono">
                             <tr>
                                 <td class="px-4 py-3 text-xs">Totals & Averages</td>
-                                <td class="px-4 py-3 text-center text-xs" :class="totalWeightage === 100 ? 'text-black' : 'text-red-600'" x-text="totalWeightage + '%'"></td>
-                                <td class="px-4 py-3 text-center text-xs text-blue-500" x-text="appraiseeKraAverage"></td>
+                                <td class="px-3 py-3 text-center text-xs" :class="totalWeightage === 100 ? 'text-black' : 'text-red-600'" x-text="totalWeightage + '%'"></td>
+                                <td class="px-3 py-3 text-center text-xs text-blue-500" x-text="appraiseeKraAverage"></td>
                                 <td class="px-4 py-3"></td>
-                                <td class="px-4 py-3 text-center text-xs text-gray-700" x-text="appraiserKraAverage"></td>
+                                <td class="px-3 py-3 text-center text-xs text-gray-700" x-text="appraiserKraAverage"></td>
                                 <td class="px-4 py-3"></td>
                             </tr>
                         </tfoot>
@@ -733,16 +733,66 @@
                                     @endif
                                 </div>
 
-                                <!-- New KRA/KPI Notes -->
-                                <div>
-                                    <label for="appraiser_new_kra" class="block text-xs font-bold text-black">New KRA/KPI Notes <span class="font-normal text-gray-400">(if any)</span></label>
+                                <!-- New KRA/KPI Targets for Next Cycle -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block text-xs font-bold text-black uppercase tracking-wider">New KRA / KPI Targets (Next Cycle)</label>
+                                        @if($perms['canEditManagerSection'])
+                                            <button type="button" @click="addNewKra()"
+                                                class="border border-gray-300 bg-white hover:bg-gray-50 px-2.5 py-1 text-[11px] font-bold text-black transition-colors cursor-pointer flex items-center gap-1">
+                                                <i data-lucide="plus" class="h-3 w-3"></i> Add New KRA
+                                            </button>
+                                        @endif
+                                    </div>
+
                                     @if($perms['canEditManagerSection'])
-                                        <textarea id="appraiser_new_kra" name="appraiserSection[newKraNotes]" rows="3"
-                                            class="mt-1 block w-full p-3 text-sm input-flat focus:border-blue-500 placeholder:text-gray-300 resize-none"
-                                            placeholder="Mention any new KRA/KPI targets for the next cycle...">{{ $appraisal['appraiserSection']['newKraNotes'] }}</textarea>
+                                        <div class="space-y-3">
+                                            <template x-for="(nkra, nidx) in newKras" :key="nidx">
+                                                <div class="p-3 border border-gray-200 bg-gray-50/50 rounded-sm relative group space-y-2">
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider" x-text="'New Target #' + (nidx + 1)"></span>
+                                                        <button type="button" @click="removeNewKra(nidx)" class="text-gray-400 hover:text-red-600 transition-colors p-0.5 cursor-pointer">
+                                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                                        <div class="md:col-span-3">
+                                                            <input type="text" :name="'appraiserSection[newKras][' + nidx + '][objective]'" x-model="nkra.objective" required
+                                                                placeholder="Target Objective / KRA description..."
+                                                                class="block w-full py-1.5 px-3 text-xs input-flat focus:border-blue-500 bg-white">
+                                                        </div>
+                                                        <div>
+                                                            <input type="number" min="0" max="100" step="1" :name="'appraiserSection[newKras][' + nidx + '][weightage]'" x-model="nkra.weightage"
+                                                                placeholder="Weight %"
+                                                                class="block w-full py-1.5 px-3 text-xs input-flat focus:border-blue-500 bg-white text-center">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <div x-show="newKras.length === 0" class="text-center py-4 border border-dashed border-gray-300 bg-gray-50">
+                                                <p class="text-xs text-gray-500 font-medium">No new KRAs added yet for next cycle.</p>
+                                                <button type="button" @click="addNewKra()" class="mt-2 text-xs font-bold text-blue-600 hover:underline cursor-pointer">
+                                                    + Add First Target KRA
+                                                </button>
+                                            </div>
+                                        </div>
                                     @else
-                                        <div class="mt-1 bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600 leading-relaxed italic">
-                                            {{ $appraisal['appraiserSection']['newKraNotes'] ?: 'None specified.' }}
+                                        <div class="space-y-2">
+                                            @forelse($appraisal['appraiserSection']['newKras'] as $index => $nkra)
+                                                <div class="p-3 bg-gray-50 border border-gray-200 flex items-center justify-between text-xs">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">{{ $index + 1 }}</span>
+                                                        <span class="font-semibold text-black">{{ $nkra['objective'] }}</span>
+                                                    </div>
+                                                    @if(!empty($nkra['weightage']))
+                                                        <span class="font-bold text-gray-700 bg-white border border-gray-200 px-2 py-0.5 rounded text-[11px]">{{ $nkra['weightage'] }}%</span>
+                                                    @endif
+                                                </div>
+                                            @empty
+                                                <div class="p-3 bg-gray-50 border border-gray-200 text-xs text-gray-500 italic">
+                                                    None specified for next cycle.
+                                                </div>
+                                            @endforelse
                                         </div>
                                     @endif
                                 </div>
@@ -1088,6 +1138,7 @@
         return {
                 kras: @json($appraisal['kras'] ?? []),
             competencies: @json($appraisal['competencyRatings'] ?? []),
+            newKras: @json($appraisal['appraiserSection']['newKras'] ?? []),
 
             addKra() {
                 this.kras.push({
@@ -1103,6 +1154,15 @@
             },
             removeKra(index) {
                 this.kras.splice(index, 1);
+            },
+            addNewKra() {
+                this.newKras.push({
+                    objective: '',
+                    weightage: ''
+                });
+            },
+            removeNewKra(index) {
+                this.newKras.splice(index, 1);
             },
             gradeToNumeric(grade) {
                 if (grade === null || grade === undefined || grade === '') return 0;

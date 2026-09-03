@@ -663,6 +663,7 @@ class AppraisalService
                 'overallRating' => $appraisal->appraiserOverallRating,
                 'recommendation' => $appraisal->appraiserRecommendation ?? '',
                 'newKraNotes' => $appraisal->appraiserNewKraNotes ?? '',
+                'newKras' => json_decode($appraisal->appraiserNewKraNotes, true) ?: (empty($appraisal->appraiserNewKraNotes) ? [] : [['objective' => $appraisal->appraiserNewKraNotes, 'weightage' => '']]),
                 'signedAt' => $appraisal->appraiserSignedAt ? $appraisal->appraiserSignedAt->toIso8601String() : null,
             ],
             // Legacy managerReview kept for backward compat
@@ -802,7 +803,9 @@ class AppraisalService
                     if (isset($payload['appraiserSection']['recommendation'])) {
                         $updates['appraiserRecommendation'] = trim($payload['appraiserSection']['recommendation']);
                     }
-                    if (isset($payload['appraiserSection']['newKraNotes'])) {
+                    if (isset($payload['appraiserSection']['newKras'])) {
+                        $updates['appraiserNewKraNotes'] = json_encode(array_values(array_filter($payload['appraiserSection']['newKras'], fn($item) => !empty(trim($item['objective'] ?? '')))));
+                    } elseif (isset($payload['appraiserSection']['newKraNotes'])) {
                         $updates['appraiserNewKraNotes'] = trim($payload['appraiserSection']['newKraNotes']);
                     }
 

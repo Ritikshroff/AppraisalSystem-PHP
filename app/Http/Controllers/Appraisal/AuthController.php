@@ -19,7 +19,8 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect('/');
         }
-        return view('appraisal.login');
+        $users = User::orderBy('role', 'asc')->orderBy('email', 'asc')->get();
+        return view('appraisal.login', compact('users'));
     }
 
     public function login(Request $request)
