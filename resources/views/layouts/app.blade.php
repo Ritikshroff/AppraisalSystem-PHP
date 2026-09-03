@@ -41,6 +41,17 @@
             border: 1px solid #e5e7eb;
         }
         
+        /* Hide Chrome, Safari, Edge, Opera number input arrows */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* Hide Firefox number input arrows */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
         /* Hide scrollbars globally */
         * {
             -ms-overflow-style: none;  /* IE and Edge */
@@ -105,17 +116,21 @@
 
     <div class="min-h-full flex flex-col">
         <!-- Navigation Bar -->
-        <nav class="bg-white border-b border-gray-200">
+        <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-9 w-9 items-center justify-center bg-blue-500 text-white font-bold">
-                            A
-                        </div>
-                        <a href="{{ route('dashboard') }}" class="text-xl font-bold tracking-tight text-black">
-                            Appraisal<span class="text-blue-500">Flow</span>
-                        </a>
-                    </div>
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
+                        @if(file_exists(public_path('images/logo.png')))
+                            <img src="{{ asset('images/logo.png') }}" alt="Cybermedia Logo" class="h-9 w-auto object-contain">
+                        @elseif(file_exists(public_path('images/logo.svg')))
+                            <img src="{{ asset('images/logo.svg') }}" alt="Cybermedia Logo" class="h-9 w-auto object-contain">
+                        @else
+                            <div class="flex h-9 w-9 items-center justify-center bg-blue-500 text-white font-bold rounded-sm">
+                                C
+                            </div>
+                            <span class="text-xl font-bold tracking-tight text-black">Cybermedia</span>
+                        @endif
+                    </a>
 
                     @auth
                     <div class="flex items-center gap-4">
@@ -162,7 +177,7 @@
         
         <!-- Footer -->
         <footer class="border-t border-gray-200 py-6 text-center text-xs text-gray-500 mt-auto bg-white">
-            <p>&copy; {{ date('Y') }} AppraisalFlow &bull; Enterprise Calibrated Performance Feedback</p>
+            <p>&copy; {{ date('Y') }} Cybermedia &bull; Enterprise Calibrated Performance Feedback</p>
         </footer>
     </div>
 

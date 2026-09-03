@@ -256,18 +256,22 @@ class AppraisalHelperService
             foreach ($rows as $index => $row) {
                 $appraiseeRating = null;
                 if (isset($row['appraiseeRating']) && $row['appraiseeRating'] !== null && $row['appraiseeRating'] !== '') {
-                    $appraiseeRating = self::gradeToNumeric($row['appraiseeRating']);
+                    $appraiseeRating = is_numeric($row['appraiseeRating']) ? self::numericToGrade(floatval($row['appraiseeRating'])) : trim($row['appraiseeRating']);
                 }
 
                 $appraiserRating = null;
                 if (isset($row['appraiserRating']) && $row['appraiserRating'] !== null && $row['appraiserRating'] !== '') {
-                    $appraiserRating = self::gradeToNumeric($row['appraiserRating']);
+                    $appraiserRating = is_numeric($row['appraiserRating']) ? self::numericToGrade(floatval($row['appraiserRating'])) : trim($row['appraiserRating']);
                 }
+
+                $weightage = isset($row['weightage']) && $row['weightage'] !== '' && floatval($row['weightage']) > 0
+                    ? self::roundTo(self::clampScale(floatval($row['weightage']), 0.0, 100.0))
+                    : '';
 
                 $ensured[] = [
                     'id' => $row['id'] ?? null,
                     'objective' => isset($row['objective']) ? trim($row['objective']) : "",
-                    'weightage' => isset($row['weightage']) ? self::roundTo(self::clampScale(floatval($row['weightage']), 0.0, 100.0)) : 0.0,
+                    'weightage' => $weightage,
                     'appraiseeRating' => $appraiseeRating,
                     'appraiserRating' => $appraiserRating,
                     'appraiseeComment' => isset($row['appraiseeComment']) ? trim($row['appraiseeComment']) : "",
@@ -281,7 +285,7 @@ class AppraisalHelperService
         return [
             [
                 'objective' => "",
-                'weightage' => 0.0,
+                'weightage' => '',
                 'appraiseeRating' => null,
                 'appraiserRating' => null,
                 'appraiseeComment' => "",

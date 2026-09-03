@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Appraisal Detail - AppraisalFlow')
+@section('title', 'Appraisal Detail - Cybermedia')
 
 @section('styles')
 <style>
@@ -301,63 +301,64 @@
                 </div>
 
                 <!-- Dynamic KRA Rows Table -->
-                <div class="border border-gray-200 no-scrollbar overflow-x-auto" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-                    <table class="w-full text-left text-sm text-black table-fixed">
+                <div class="border border-gray-200" x-show="!collapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+                    <table class="w-full text-left text-sm text-black">
                         <thead class="bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500 border-b border-gray-200 font-bold font-sans">
                             <tr>
-                                <th class="px-4 py-3 w-1/4">Objective / KRA / KPI</th>
-                                <th class="px-3 py-3 w-20 text-center">Weight %</th>
-                                <th class="px-3 py-3 w-28 text-center">Rating — Appraisee</th>
-                                <th class="px-4 py-3 w-1/4">Comment — Appraisee</th>
-                                <th class="px-3 py-3 w-28 text-center">Rating — Appraiser</th>
-                                <th class="px-4 py-3 w-1/4">Comment — Appraiser</th>
+                                <th class="px-4 py-3 min-w-[220px]">Objective / KRA / KPI</th>
+                                <th class="px-3 py-3 w-24 text-center">Weight %</th>
+                                <th class="px-3 py-3 w-32 text-center">Rating — Appraisee</th>
+                                <th class="px-4 py-3 min-w-[250px]">Comment — Appraisee</th>
+                                <th class="px-3 py-3 w-32 text-center">Rating — Appraiser</th>
+                                <th class="px-4 py-3 min-w-[250px]">Comment — Appraiser</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             <template x-for="(kra, index) in kras" :key="index">
-                                <tr class="hover:bg-gray-50/50 relative z-10 hover:z-20">
+                                <tr class="hover:bg-gray-50/50 relative" :class="kra._open ? 'z-40' : 'z-10'">
                                     <!-- Objective Column -->
-                                    <td class="px-4 py-3 align-top">
+                                    <td class="px-4 py-3 align-top min-w-[220px]">
                                         <input type="hidden" :name="'kras[' + index + '][id]'" :value="kra.id">
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <input type="text" :name="'kras[' + index + '][objective]'" x-model="kra.objective" required
                                                 placeholder="Enter Objective / KRA / KPI..."
-                                                class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 bg-white">
+                                                class="block w-full h-9 px-3 text-xs input-flat focus:border-blue-500 bg-white border border-gray-300 rounded">
                                         </template>
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <div>
+                                            <div class="min-h-[36px] flex items-center">
                                                 <span class="text-xs font-semibold text-black break-words" x-text="kra.objective || '-'"></span>
                                                 <input type="hidden" :name="'kras[' + index + '][objective]'" :value="kra.objective">
                                             </div>
                                         </template>
                                     </td>
                                     <!-- Weightage Column -->
-                                    <td class="px-3 py-3 text-center align-top">
+                                    <td class="px-3 py-3 text-center align-top w-24">
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <div>
-                                                <span class="text-xs font-bold text-gray-700" x-text="kra.weightage + '%'"></span>
+                                            <div class="min-h-[36px] flex items-center justify-center">
+                                                <span class="text-xs font-bold text-gray-700" x-text="kra.weightage ? kra.weightage + '%' : '-'"></span>
                                                 <input type="hidden" :name="'kras[' + index + '][weightage]'" :value="kra.weightage">
                                             </div>
                                         </template>
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
                                             <input type="number" min="0" max="100" step="1" :name="'kras[' + index + '][weightage]'" x-model="kra.weightage" required
-                                                class="block w-full text-center py-1.5 px-2 text-xs input-flat focus:border-blue-500">
+                                                placeholder="Enter"
+                                                class="block w-full h-9 text-center px-2 text-xs input-flat focus:border-blue-500 border border-gray-300 rounded">
                                         </template>
                                     </td>
                                     <!-- Appraisee Rating Column -->
-                                    <td class="px-3 py-3 text-center align-top">
+                                    <td class="px-3 py-3 text-center align-top w-32">
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                            <div class="relative z-30" x-data="{ open: false }" @click.outside="open = false; kra._open = false">
                                                 <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
-                                                <button type="button" @click="open = !open" 
-                                                    class="w-full flex items-center justify-between py-1.5 px-2.5 text-xs bg-white border border-gray-300 rounded font-semibold text-black hover:border-blue-500 focus:outline-none transition-colors">
+                                                <button type="button" @click="open = !open; kra._open = open" 
+                                                    class="w-full h-9 flex items-center justify-between px-2.5 text-xs bg-white border border-gray-300 rounded font-semibold text-black hover:border-blue-500 focus:outline-none transition-colors">
                                                     <span x-text="kra.appraiseeRating || 'Select'" :class="kra.appraiseeRating ? 'text-blue-600 font-bold' : 'text-gray-400'"></span>
                                                     <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                                 </button>
                                                 <div x-show="open" x-transition.opacity.duration.150ms x-cloak
                                                     class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
                                                     <template x-for="opt in ['A+', 'A', 'B+', 'B', 'C', 'D']" :key="opt">
-                                                        <div @click="kra.appraiseeRating = opt; open = false" 
+                                                        <div @click="kra.appraiseeRating = opt; open = false; kra._open = false" 
                                                             class="px-3 py-1.5 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between text-left"
                                                             :class="kra.appraiseeRating === opt ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
                                                             <span x-text="opt"></span>
@@ -368,45 +369,47 @@
                                             </div>
                                         </template>
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <div>
+                                            <div class="min-h-[36px] flex items-center justify-center">
                                                 <span class="text-xs font-bold text-blue-500" x-text="kra.appraiseeRating || '-'"></span>
                                                 <input type="hidden" :name="'kras[' + index + '][appraiseeRating]'" :value="kra.appraiseeRating">
                                             </div>
                                         </template>
                                     </td>
                                     <!-- Appraisee Comment Column -->
-                                    <td class="px-4 py-3 align-top">
+                                    <td class="px-4 py-3 align-top min-w-[250px]">
                                         <template x-if="{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <textarea :name="'kras[' + index + '][appraiseeComment]'" x-model="kra.appraiseeComment" rows="2"
-                                                class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white" placeholder="Self comment..."></textarea>
+                                            <textarea :name="'kras[' + index + '][appraiseeComment]'" x-model="kra.appraiseeComment" rows="1"
+                                                class="block w-full h-9 py-2 px-3 text-xs input-flat focus:border-blue-500 resize-none bg-white border border-gray-300 rounded leading-tight" placeholder="Self comment..."></textarea>
                                         </template>
                                         <template x-if="!{{ $perms['canEditEmployeeSection'] ? 'true' : 'false' }}">
-                                            <div>
+                                            <div class="min-h-[36px] flex items-center">
                                                 <p class="text-xs text-gray-700 font-sans whitespace-pre-line break-words" x-text="kra.appraiseeComment || '- '"></p>
                                                 <input type="hidden" :name="'kras[' + index + '][appraiseeComment]'" :value="kra.appraiseeComment">
                                             </div>
                                         </template>
                                     </td>
                                     <!-- Appraiser Rating Column -->
-                                    <td class="px-3 py-3 text-center align-top">
+                                    <td class="px-3 py-3 text-center align-top w-32">
                                         @if($status === 'DRAFT')
                                             <!-- Locked/Later stage -->
-                                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
-                                                <i data-lucide="lock" class="h-3 w-3"></i> Later
-                                            </span>
+                                            <div class="h-9 flex items-center justify-center">
+                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-1 font-bold uppercase tracking-wider rounded font-sans">
+                                                    <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                                </span>
+                                            </div>
                                         @else
                                             <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                                <div class="relative z-30" x-data="{ open: false }" @click.outside="open = false; kra._open = false">
                                                     <input type="hidden" :name="'kras[' + index + '][appraiserRating]'" :value="kra.appraiserRating">
-                                                    <button type="button" @click="open = !open" 
-                                                        class="w-full flex items-center justify-between py-1.5 px-2.5 text-xs bg-white border border-gray-300 rounded font-semibold text-black hover:border-blue-500 focus:outline-none transition-colors">
+                                                    <button type="button" @click="open = !open; kra._open = open" 
+                                                        class="w-full h-9 flex items-center justify-between px-2.5 text-xs bg-white border border-gray-300 rounded font-semibold text-black hover:border-blue-500 focus:outline-none transition-colors">
                                                         <span x-text="kra.appraiserRating || 'Select'" :class="kra.appraiserRating ? 'text-gray-900 font-bold' : 'text-gray-400'"></span>
                                                         <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                                     </button>
                                                     <div x-show="open" x-transition.opacity.duration.150ms x-cloak
                                                         class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
                                                         <template x-for="opt in ['A+', 'A', 'B+', 'B', 'C', 'D']" :key="opt">
-                                                            <div @click="kra.appraiserRating = opt; open = false" 
+                                                            <div @click="kra.appraiserRating = opt; open = false; kra._open = false" 
                                                                 class="px-3 py-1.5 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between text-left"
                                                                 :class="kra.appraiserRating === opt ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
                                                                 <span x-text="opt"></span>
@@ -417,7 +420,7 @@
                                                 </div>
                                             </template>
                                             <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                <div>
+                                                <div class="min-h-[36px] flex items-center justify-center">
                                                     <span class="text-xs font-bold text-gray-750" x-text="kra.appraiserRating || '-'"></span>
                                                     <input type="hidden" :name="'kras[' + index + '][appraiserRating]'" :value="kra.appraiserRating">
                                                 </div>
@@ -425,19 +428,21 @@
                                         @endif
                                     </td>
                                     <!-- Appraiser Comment Column -->
-                                    <td class="px-4 py-3 align-top">
+                                    <td class="px-4 py-3 align-top min-w-[250px]">
                                         @if($status === 'DRAFT')
                                             <!-- Locked/Later stage -->
-                                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded font-sans">
-                                                <i data-lucide="lock" class="h-3 w-3"></i> Later
-                                            </span>
+                                            <div class="h-9 flex items-center justify-center">
+                                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-1 font-bold uppercase tracking-wider rounded font-sans">
+                                                    <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                                </span>
+                                            </div>
                                         @else
                                             <template x-if="{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                <textarea :name="'kras[' + index + '][appraiserComment]'" x-model="kra.appraiserComment" rows="2"
-                                                    class="block w-full py-1.5 px-2 text-xs input-flat focus:border-blue-500 resize-none bg-white border border-gray-300 rounded" placeholder="Appraiser comment..."></textarea>
+                                                <textarea :name="'kras[' + index + '][appraiserComment]'" x-model="kra.appraiserComment" rows="1"
+                                                    class="block w-full h-9 py-2 px-3 text-xs input-flat focus:border-blue-500 resize-none bg-white border border-gray-300 rounded leading-tight" placeholder="Appraiser comment..."></textarea>
                                             </template>
                                             <template x-if="!{{ $perms['canEditManagerSection'] ? 'true' : 'false' }}">
-                                                <div>
+                                                <div class="min-h-[36px] flex items-center">
                                                     <p class="text-xs text-gray-700 font-sans whitespace-pre-line break-words" x-text="kra.appraiserComment || '- '"></p>
                                                     <input type="hidden" :name="'kras[' + index + '][appraiserComment]'" :value="kra.appraiserComment">
                                                 </div>
@@ -525,7 +530,7 @@
                                         <td class="px-4 py-3">
                                             @if($perms['canEditEmployeeSection'])
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <div class="relative w-16" x-data="{ open: false }" @click.outside="open = false">
+                                                    <div class="relative w-16" x-data="{ open: false }" @click.outside="open = false" :class="{ 'z-50': open }">
                                                         <input type="hidden" :name="'competencyRatings[' + index + '][employeeScore]'" :value="comp.employeeScore">
                                                         <button type="button" @click="open = !open" 
                                                             class="w-full flex items-center justify-between py-1.5 px-2 text-xs bg-white border border-gray-300 rounded font-bold text-black hover:border-blue-500 focus:outline-none transition-colors">
@@ -585,15 +590,15 @@
 
                                         <!-- Appraiser Score: number + fixed-width initial badge -->
                                         <td class="px-4 py-3">
-                                            @if($status === 'DRAFT')
+                                            @if($status === 'DRAFT' || ($role === 'EMPLOYEE' && in_array($status, ['SUBMITTED', 'MANAGER_REVIEW'])))
                                                 <div class="flex items-center justify-center">
                                                     <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-[10px] px-2 py-1 font-bold uppercase tracking-wider font-sans">
-                                                        <i data-lucide="lock" class="h-3 w-3"></i> Later
+                                                        <i data-lucide="lock" class="h-3 w-3"></i> Hidden
                                                     </span>
                                                 </div>
                                             @elseif($perms['canEditManagerSection'])
                                                 <div class="flex items-center justify-center gap-2">
-                                                    <div class="relative w-16" x-data="{ open: false }" @click.outside="open = false">
+                                                    <div class="relative w-16" x-data="{ open: false }" @click.outside="open = false" :class="{ 'z-50': open }">
                                                         <input type="hidden" :name="'competencyRatings[' + index + '][appraiserScore]'" :value="comp.appraiserScore">
                                                         <button type="button" @click="open = !open" 
                                                             class="w-full flex items-center justify-between py-1.5 px-2 text-xs bg-white border border-gray-300 rounded font-bold text-black hover:border-blue-500 focus:outline-none transition-colors">
@@ -866,48 +871,140 @@
                                     @endif
                                 </div>
 
-                                <!-- Reviewer Rating and Final Rating -->
-                                <div class="grid grid-cols-2 gap-4">
+                                <!-- Reviewer Rating and Final Rating (Letter Grades A+, A, B, C, D) -->
+                                <div class="grid grid-cols-3 gap-4" x-data="{ 
+                                    finalGrade: '{{ $appraisal['buHeadReview']['finalRating'] ?? '' }}',
+                                    empGrade: '{{ $appraisal['employee']['grade'] ?? ($appraisal['grade'] ?? 'B') }}',
+                                    isPromo: '{{ $appraisal['promotionRecommended'] ? '1' : '0' }}',
+                                    hike: '{{ $appraisal['buHeadReview']['hikePercentage'] ?? '' }}',
+                                    calcHike() {
+                                        let isGradeA = String(this.empGrade).toUpperCase().includes('A');
+                                        let matrix = {
+                                            'A+': isGradeA ? 10 : 15,
+                                            'A':  isGradeA ? 7  : 10,
+                                            'B':  isGradeA ? 4  : 6,
+                                            'C':  isGradeA ? 2  : 3,
+                                            'D':  0
+                                        };
+                                        let base = matrix[this.finalGrade] !== undefined ? matrix[this.finalGrade] : 0;
+                                        let promoAdd = (this.isPromo === '1' || this.isPromo === true) ? (isGradeA ? 4 : 5) : 0;
+                                        if (this.finalGrade) {
+                                            this.hike = base + promoAdd;
+                                        }
+                                    }
+                                }">
                                     <div>
-                                        <label for="reviewer_rating" class="block text-xs font-bold text-black">Reviewer Rating (1–10)</label>
+                                        <label for="reviewer_rating" class="block text-xs font-bold text-black mb-1">Reviewer Rating</label>
                                         @if($perms['canEditBUHeadSection'])
-                                            <input id="reviewer_rating" name="reviewerSection[rating]" type="number" min="1" max="10" step="0.1"
-                                                value="{{ $appraisal['reviewerSection']['rating'] }}"
-                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
+                                            <div class="relative" x-data="{ open: false, selected: '{{ $appraisal['reviewerSection']['rating'] ?? '' }}' }" @click.outside="open = false">
+                                                <input type="hidden" name="reviewerSection[rating]" :value="selected">
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full py-2 px-3 text-sm bg-white border border-gray-300 rounded font-bold text-black flex items-center justify-between hover:border-blue-500 focus:outline-none">
+                                                    <span x-text="selected || 'Select Rating'" :class="selected ? 'text-blue-600 font-extrabold' : 'text-gray-400'"></span>
+                                                    <svg class="w-4 h-4 text-gray-400" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </button>
+                                                <div x-show="open" x-cloak class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
+                                                    <template x-for="g in ['A+', 'A', 'B', 'C', 'D']" :key="g">
+                                                        <div @click="selected = g; open = false" class="px-4 py-2 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between"
+                                                            :class="selected === g ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                                            <span x-text="g"></span>
+                                                            <svg x-show="selected === g" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
                                         @else
-                                            <p class="mt-1 text-xl font-extrabold text-gray-900">
-                                                {{ $appraisal['reviewerSection']['rating'] !== null ? number_format($appraisal['reviewerSection']['rating'], 1) : 'N/A' }}
+                                            <p class="mt-1 text-lg font-extrabold text-gray-900">
+                                                {{ $appraisal['reviewerSection']['rating'] ?: 'N/A' }}
                                             </p>
                                         @endif
                                     </div>
                                     <div>
-                                        <label for="bu_head_rating" class="block text-xs font-bold text-black">Final Rating</label>
+                                        <label for="bu_head_rating" class="block text-xs font-bold text-black mb-1">Final Rating</label>
                                         @if($perms['canEditBUHeadSection'])
-                                            <input id="bu_head_rating" name="buHeadReview[finalRating]" type="number" min="1" max="10" step="0.1" required
-                                                value="{{ $appraisal['buHeadReview']['finalRating'] }}"
-                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold">
+                                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                                <input type="hidden" name="buHeadReview[finalRating]" :value="finalGrade">
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full py-2 px-3 text-sm bg-white border border-gray-300 rounded font-bold text-black flex items-center justify-between hover:border-blue-500 focus:outline-none">
+                                                    <span x-text="finalGrade || 'Select Final Rating'" :class="finalGrade ? 'text-blue-600 font-extrabold' : 'text-gray-400'"></span>
+                                                    <svg class="w-4 h-4 text-gray-400" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                </button>
+                                                <div x-show="open" x-cloak class="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg py-1 text-xs">
+                                                    <template x-for="g in ['A+', 'A', 'B', 'C', 'D']" :key="g">
+                                                        <div @click="finalGrade = g; open = false; calcHike()" class="px-4 py-2 hover:bg-blue-50 hover:text-blue-600 cursor-pointer font-bold flex items-center justify-between"
+                                                            :class="finalGrade === g ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                                            <span x-text="g"></span>
+                                                            <svg x-show="finalGrade === g" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
                                         @else
-                                            <p class="mt-1 text-xl font-extrabold text-blue-600">
-                                                {{ $appraisal['buHeadReview']['finalRating'] !== null ? number_format($appraisal['buHeadReview']['finalRating'], 2) : 'N/A' }}
+                                            <p class="mt-1 text-lg font-extrabold text-blue-600">
+                                                {{ $appraisal['buHeadReview']['finalRating'] ?: 'N/A' }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <label for="bu_head_hike" class="block text-xs font-bold text-black mb-1">Approved Hike %</label>
+                                        @if($perms['canEditBUHeadSection'])
+                                            <div class="relative">
+                                                <input id="bu_head_hike" name="buHeadReview[hikePercentage]" type="number" min="0" max="100" step="0.1"
+                                                    x-model="hike"
+                                                    class="block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold text-emerald-600 bg-white border border-gray-300 rounded" placeholder="0%">
+                                            </div>
+                                        @else
+                                            <p class="mt-1 text-lg font-extrabold text-emerald-600">
+                                                {{ $appraisal['buHeadReview']['hikePercentage'] !== null ? '+' . number_format($appraisal['buHeadReview']['hikePercentage'], 1) . '%' : 'N/A' }}
                                             </p>
                                         @endif
                                     </div>
                                 </div>
 
-                                @if($appraisal['type'] === 'SALARY')
-                                    <div>
-                                        <label for="bu_head_hike" class="block text-xs font-bold text-black">Hike Percentage</label>
-                                        @if($perms['canEditBUHeadSection'])
-                                            <input id="bu_head_hike" name="buHeadReview[hikePercentage]" type="number" min="0" max="100" step="0.1"
-                                                value="{{ $appraisal['buHeadReview']['hikePercentage'] }}"
-                                                class="mt-1 block w-full py-2 px-3 text-sm input-flat focus:border-blue-500 text-center font-bold text-blue-500">
-                                        @else
-                                            <p class="mt-1 text-xl font-extrabold text-blue-500">
-                                                {{ $appraisal['buHeadReview']['hikePercentage'] !== null ? '+' . number_format($appraisal['buHeadReview']['hikePercentage'], 1) . '%' : 'N/A' }}
-                                            </p>
-                                        @endif
+                                <!-- Rating & Hike Criteria Matrix Guide -->
+                                <div class="bg-gray-50 border border-gray-200 p-3.5 rounded text-xs space-y-2">
+                                    <h4 class="font-bold text-gray-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                        <i data-lucide="info" class="w-3.5 h-3.5 text-blue-500"></i> Cybermedia Rating & Hike Criteria Matrix
+                                    </h4>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-center border border-gray-200 bg-white text-[11px]">
+                                            <thead class="bg-gray-100 font-bold text-gray-700 border-b border-gray-200">
+                                                <tr>
+                                                    <th class="px-2 py-1 text-left">Classification</th>
+                                                    <th class="px-2 py-1">A+</th>
+                                                    <th class="px-2 py-1">A</th>
+                                                    <th class="px-2 py-1">B</th>
+                                                    <th class="px-2 py-1">C</th>
+                                                    <th class="px-2 py-1">D</th>
+                                                    <th class="px-2 py-1">Promotion</th>
+                                                    <th class="px-2 py-1">Adjustment</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200 font-medium">
+                                                <tr>
+                                                    <td class="px-2 py-1 text-left font-bold text-gray-800">Grade B (upto VI)</td>
+                                                    <td class="px-2 py-1 text-emerald-600 font-bold">15%</td>
+                                                    <td class="px-2 py-1 text-emerald-600 font-bold">10%</td>
+                                                    <td class="px-2 py-1 text-blue-600 font-bold">6%</td>
+                                                    <td class="px-2 py-1 text-amber-600 font-bold">3%</td>
+                                                    <td class="px-2 py-1 text-red-600 font-bold">0%</td>
+                                                    <td class="px-2 py-1 font-bold">5%</td>
+                                                    <td class="px-2 py-1 font-bold">4%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-2 py-1 text-left font-bold text-gray-800">Grade A (upto VIA)</td>
+                                                    <td class="px-2 py-1 text-emerald-600 font-bold">10%</td>
+                                                    <td class="px-2 py-1 text-emerald-600 font-bold">7%</td>
+                                                    <td class="px-2 py-1 text-blue-600 font-bold">4%</td>
+                                                    <td class="px-2 py-1 text-amber-600 font-bold">2%</td>
+                                                    <td class="px-2 py-1 text-red-600 font-bold">0%</td>
+                                                    <td class="px-2 py-1 font-bold">4%</td>
+                                                    <td class="px-2 py-1 font-bold">3%</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                @endif
+                                </div>
 
                                 <!-- Promotion + Grade -->
                                 @if($perms['canEditBUHeadSection'] || $appraisal['promotionRecommended'] !== null)
@@ -1144,7 +1241,7 @@
                 this.kras.push({
                     id: '',
                     objective: '',
-                    weightage: 0,
+                    weightage: '',
                     appraiseeRating: '',
                     appraiseeComment: '',
                     appraiserRating: '',

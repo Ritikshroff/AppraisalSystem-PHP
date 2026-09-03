@@ -616,6 +616,23 @@ class AppraisalService
         $managerReview = json_decode($appraisal->managerReview, true) ?: [];
         $buHeadReview = json_decode($appraisal->buHeadReview, true) ?: [];
 
+        $userRoleUpper = strtoupper($user->role ?? '');
+        $isReviewer = in_array($userRoleUpper, ['BU_HEAD', 'HR']);
+
+        $isEmployeeViewing = ($user->employeeId === $appraisal->employeeId && !$isReviewer);
+        $isManagerViewing = (($user->employeeId === $appraisal->managerId || $userRoleUpper === 'MANAGER') && !$isReviewer);
+        $statusUpper = strtoupper($appraisal->status);
+
+        // Hide appraisee (employee) ratings from Manager during active review stage (SUBMITTED) for blind assessment
+        $hideAppraiseeRatingsFromManager = ($isManagerViewing && $statusUpper === 'SUBMITTED');
+        // Hide appraiser (manager) ratings from Employee during active drafting/review stage
+        $hideAppraiserRatingsFromEmployee = ($isEmployeeViewing && in_array($statusUpper, ['DRAFT', 'SUBMITTED', 'MANAGER_REVIEW']));
+
+        if ($isReviewer) {
+            $hideAppraiseeRatingsFromManager = false;
+            $hideAppraiserRatingsFromEmployee = false;
+        }
+
         return [
             'id' => $appraisal->id,
             'type' => $appraisal->type,
@@ -641,10 +658,10 @@ class AppraisalService
                     'id' => $item->id,
                     'objective' => $item->objective,
                     'weightage' => $item->weightage,
-                    'appraiseeRating' => $item->appraiseeRating,
-                    'appraiserRating' => $item->appraiserRating,
-                    'appraiseeComment' => $item->appraiseeComment ?? "",
-                    'comments' => $item->comments ?? "",
+                    'appraiseeRating' => $hideAppraiseeRatingsFromManager ? null : $item->appraiseeRating,
+                    'appraiserRating' => $hideAppraiserRatingsFromEmployee ? null : $item->appraiserRating,
+                    'appraiseeComment' => $hideAppraiseeRatingsFromManager ? "" : ($item->appraiseeComment ?? ""),
+                    'comments' => $hideAppraiserRatingsFromEmployee ? "" : ($item->comments ?? ""),
                     'displayOrder' => $item->displayOrder,
                 ])->toArray()
             ),
@@ -653,8 +670,8 @@ class AppraisalService
                 $appraisal->competencyRatings->map(fn($item) => [
                     'id' => $item->id,
                     'competencyName' => $item->competencyName,
-                    'employeeScore' => $item->employeeScore,
-                    'appraiserScore' => $item->appraiserScore,
+                    'employeeScore' => $hideAppraiseeRatingsFromManager ? null : $item->employeeScore,
+                    'appraiserScore' => $hideAppraiserRatingsFromEmployee ? null : $item->appraiserScore,
                     'displayOrder' => $item->displayOrder,
                 ])->toArray()
             ),

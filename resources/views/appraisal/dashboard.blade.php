@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - AppraisalFlow')
+@section('title', 'Dashboard - Cybermedia')
 
 @section('content')
     @php
@@ -22,8 +22,8 @@
                     historyData: [],
                     historyEmployeeName: ''
                 }">
-        <!-- Header Summary Card -->
-        <div class="bg-white border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <!-- Header Summary Card (Sticky) -->
+        <div class="bg-white border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 sticky top-16 z-30 shadow-sm">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight text-black">
                     Welcome back, <span class="text-blue-500">{{ $data['viewer']['name'] }}</span>
@@ -102,9 +102,14 @@
                     </div>
                     <div>
                         <a href="{{ route('appraisals.show', $mySelfAppraisalItem['id']) }}"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer">
-                            <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            {{ $mySelfAppraisalItem['status'] === 'DRAFT' ? 'Fill My Self Appraisal' : 'View My Appraisal' }}
+                            class="inline-flex items-center gap-2 px-5 py-2.5 {{ $mySelfAppraisalItem['status'] === 'DRAFT' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700' }} text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer">
+                            @if($mySelfAppraisalItem['status'] === 'DRAFT')
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                Fill My Self Appraisal
+                            @else
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                View Submitted Appraisal
+                            @endif
                         </a>
                     </div>
                 </div>

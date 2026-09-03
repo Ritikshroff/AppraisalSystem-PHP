@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login - AppraisalFlow')
+@section('title', 'Login - Cybermedia')
 
 @section('content')
 <div class="flex min-h-[70vh] flex-col justify-center py-6 sm:px-6 lg:px-8">

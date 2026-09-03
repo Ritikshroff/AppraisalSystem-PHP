@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Signup - AppraisalFlow')
+@section('title', 'Signup - Cybermedia')
 
 @section('content')
 <div class="mx-auto flex min-h-[80vh] w-full max-w-6xl items-center gap-10 py-10 px-4">
