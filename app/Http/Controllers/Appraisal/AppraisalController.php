@@ -31,6 +31,26 @@ class AppraisalController extends Controller
         return $this->mutate($request, $id, 'submit');
     }
 
+    public function feedback(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comments' => 'nullable|string|max:1000',
+        ]);
+
+        $appraisal = \App\Models\Appraisal::find($id);
+        if (!$appraisal) {
+            abort(404);
+        }
+
+        $appraisal->update([
+            'authorFeedbackRating' => $validated['rating'],
+            'authorFeedbackComments' => $validated['comments'] ?? null,
+        ]);
+
+        return back()->with('success', 'Thank you! Your feedback on this AI appraisal summary has been recorded (Rating: ' . $validated['rating'] . '/5).');
+    }
+
     private function mutate(Request $request, string $id, string $mode)
     {
         $user = Auth::user();

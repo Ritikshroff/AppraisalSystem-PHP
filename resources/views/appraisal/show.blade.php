@@ -243,6 +243,60 @@
                         </ul>
                     </div>
                 </div>
+
+                <!-- Author AI Quality Feedback Rating System -->
+                <div class="mt-6 pt-6 border-t border-gray-200 bg-gray-50/80 -mx-6 -mb-6 p-6">
+                    <form action="{{ route('appraisals.feedback', $appraisal['id']) }}" method="POST" x-data="{ rating: {{ $appraisal['authorFeedbackRating'] ?? 0 }}, hoverRating: 0 }">
+                        @csrf
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                                    <i data-lucide="thumbs-up" class="w-4 h-4 text-blue-600"></i>
+                                    Rate AI Quality (Author Feedback System)
+                                </h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Rate accuracy and factual quality (1 to 5 stars) to train and improve future AI models.</p>
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                                    <button type="button" 
+                                        @click="rating = star"
+                                        @mouseenter="hoverRating = star"
+                                        @mouseleave="hoverRating = 0"
+                                        class="p-1 text-gray-300 hover:text-amber-400 focus:outline-none transition-colors cursor-pointer">
+                                        <svg class="w-6 h-6 transition-colors" 
+                                            :class="(hoverRating || rating) >= star ? 'text-amber-400 fill-amber-400' : 'text-gray-300 fill-gray-100'" 
+                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                        </svg>
+                                    </button>
+                                </template>
+                                <input type="hidden" name="rating" :value="rating" required>
+                            </div>
+                        </div>
+
+                        <div x-show="rating > 0" x-cloak class="mt-4 space-y-3 pt-3 border-t border-gray-200">
+                            <textarea name="comments" rows="2" class="w-full text-xs p-2.5 bg-white border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                                placeholder="Optional feedback: Specify if content was exaggerated, non-factual, or had unnecessary details...">{{ $appraisal['authorFeedbackComments'] }}</textarea>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[11px] text-gray-500" x-text="rating === 1 ? 'Poor / Factually inaccurate' : (rating === 2 ? 'Needs improvement' : (rating === 3 ? 'Average quality' : (rating === 4 ? 'Good & factual' : 'Excellent & exact')))"></span>
+                                <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer">
+                                    Submit Feedback
+                                </button>
+                            </div>
+                        </div>
+
+                        @if($appraisal['authorFeedbackRating'])
+                            <div class="mt-3 text-xs text-emerald-700 font-semibold flex items-center gap-1.5">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                                Saved Rating: {{ $appraisal['authorFeedbackRating'] }}/5 stars
+                                @if($appraisal['authorFeedbackComments'])
+                                    — "{{ $appraisal['authorFeedbackComments'] }}"
+                                @endif
+                            </div>
+                        @endif
+                    </form>
+                </div>
             </div>
         @endif
 

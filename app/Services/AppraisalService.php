@@ -722,6 +722,8 @@ class AppraisalService
             'specialAppeal' => $appraisal->specialAppeal,
             'specialAppealStatus' => $appraisal->specialAppealStatus,
             'specialAppealComments' => $appraisal->specialAppealComments,
+            'authorFeedbackRating' => $appraisal->authorFeedbackRating,
+            'authorFeedbackComments' => $appraisal->authorFeedbackComments,
             'nextCycleKras' => [],
             'updatedAt' => $appraisal->updated_at->toIso8601String(),
         ];

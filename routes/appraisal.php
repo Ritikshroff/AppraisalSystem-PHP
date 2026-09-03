@@ -19,10 +19,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Appraisal Detail, Save, Submit Routes
+    // Appraisal Detail, Save, Submit, Feedback Routes
     Route::get('/appraisals/{id}', [AppraisalController::class, 'show'])->name('appraisals.show');
     Route::post('/appraisals/{id}/save', [AppraisalController::class, 'save'])->name('appraisals.save');
     Route::post('/appraisals/{id}/submit', [AppraisalController::class, 'submit'])->name('appraisals.submit');
+    Route::post('/appraisals/{id}/feedback', [AppraisalController::class, 'feedback'])->name('appraisals.feedback');
 
     // HR Admin Routes
     Route::middleware('role:HR')->prefix('admin')->name('admin.')->group(function () {

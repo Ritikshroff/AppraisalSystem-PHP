@@ -57,9 +57,12 @@ class Appraisal extends Model
         'specialAppeal',
         'specialAppealStatus',
         'specialAppealComments',
+        'authorFeedbackRating',
+        'authorFeedbackComments',
     ];
 
     protected $casts = [
+        'authorFeedbackRating'   => 'integer',
         'managerOverallRating'   => 'double',
         'appraiserOverallRating' => 'double',
         'reviewerRating'         => 'double',

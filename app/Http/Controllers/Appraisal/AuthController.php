@@ -105,7 +105,7 @@ class AuthController extends Controller
         try {
             DB::transaction(function () use ($validated, $role, $email, $team) {
                 $roleCount = Employee::where('role', $role)->count();
-                
+
                 $employeeCode = match ($role) {
                     'BU_HEAD' => 'BUH-' . str_pad($roleCount + 1, 4, '0', STR_PAD_LEFT),
                     'MANAGER' => 'MGR-' . str_pad($roleCount + 1001, 4, '0', STR_PAD_LEFT),
@@ -161,4 +161,5 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         return redirect('/login');
     }
-}
+
+
